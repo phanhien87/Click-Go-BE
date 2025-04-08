@@ -1,4 +1,4 @@
-
+﻿
 using Click_Go.Data;
 using Click_Go.Models;
 using Click_Go.Services.Interfaces;
@@ -59,6 +59,16 @@ namespace Click_Go
                 };
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowReactApp",
+                    builder => builder
+                        .WithOrigins("http://localhost:3000")  // Chỉ cho phép frontend này gọi
+                        .AllowAnyMethod()                      // Cho phép mọi method (GET, POST, PUT, DELETE, ...)
+                        .AllowAnyHeader());                    // Cho phép mọi header (ví dụ Authorization)
+            });
+
+
             builder.Services.AddAuthorization();
 
 
@@ -72,7 +82,7 @@ namespace Click_Go
             }
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
@@ -83,6 +93,7 @@ namespace Click_Go
                 var services = scope.ServiceProvider;
                 await SeedData.SeedAdminAsync(services);
             }
+            app.UseCors("AllowReactApp");
 
 
             await app.RunAsync();

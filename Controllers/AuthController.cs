@@ -25,7 +25,7 @@ namespace Click_Go.Controllers
         public async Task<IActionResult> Login(LoginDto model)
         {
             var token = await _authService.LoginAsync(model);
-            return token == "Unauthorized" ? Unauthorized() : Ok(new { token });
+            return token == null ? Unauthorized() : Ok(new { token });
         }
     }
 }

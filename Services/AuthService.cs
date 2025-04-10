@@ -28,7 +28,7 @@ namespace Click_Go.Services
                 return await GenerateJwtTokenAsync(user);
             }
 
-            return "Unauthorized";
+            return null;
         }
 
         public async Task<string> RegisterAsync(RegisterDto model)

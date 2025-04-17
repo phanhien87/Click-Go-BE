@@ -72,7 +72,7 @@ namespace Click_Go
 
 
             builder.Services.AddAuthorization();
-
+           
 
             var app = builder.Build();
 

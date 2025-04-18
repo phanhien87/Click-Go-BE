@@ -1,5 +1,4 @@
-﻿
-using Click_Go.Data;
+﻿using Click_Go.Data;
 using Click_Go.Models;
 using Click_Go.Services.Interfaces;
 using Click_Go.Services;
@@ -8,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
+using Click_Go.Helper;
 
 namespace Click_Go
 {
@@ -19,14 +20,19 @@ namespace Click_Go
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             
             //Register DI
             builder.Services.AddScoped<IAuthService, AuthService>();
-
+            builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<SaveImage>();
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

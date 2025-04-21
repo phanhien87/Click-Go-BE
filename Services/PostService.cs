@@ -53,7 +53,8 @@ namespace Click_Go.Services
                 Images = new List<Image>(),
                 Opening_Hours = new List<OpeningHour>(), 
                 CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
+                UpdatedDate = DateTime.UtcNow,
+                Status = 1
             };
 
             // Handle Logo Image Upload

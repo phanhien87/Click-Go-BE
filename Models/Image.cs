@@ -2,7 +2,7 @@
 {
     public class Image : BaseEntity
     {
-        public long? Posts_Id { get; set; }
+        public long? PostId { get; set; }
         public Post? Post { get; set; }
 
         public long? CommentId { get; set; }

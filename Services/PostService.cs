@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace Click_Go.Services
 {
@@ -53,8 +54,9 @@ namespace Click_Go.Services
                 Images = new List<Image>(),
                 Opening_Hours = new List<OpeningHour>(), 
                 CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow,
-                Status = 1
+                Status = 1,
+                CreatedUser = Guid.Parse(userId)
+
             };
 
             // Handle Logo Image Upload

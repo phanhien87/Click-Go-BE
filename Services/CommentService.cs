@@ -1,25 +1,29 @@
 ﻿using Click_Go.DTOs;
+using Click_Go.Helper;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Services.Interfaces;
 using Humanizer;
+using Microsoft.EntityFrameworkCore;
 
 namespace Click_Go.Services
 {
     public class CommentService : ICommentService
     {
-       
+
         private readonly ICommentRepository _commentRepo;
         private readonly IImageRepository _imageRepo;
-
-        public CommentService(ICommentRepository commentRepo, IImageRepository imageRepo)
+        private readonly UnitOfWork _unitOfWork;
+        public CommentService(ICommentRepository commentRepo, IImageRepository imageRepo, UnitOfWork unitOfWork)
         {
             _commentRepo = commentRepo;
             _imageRepo = imageRepo;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task AddCommentAsync(CommentDto dto, string userId)
         {
+
             var comment = new Comment
             {
                 Content = dto.Content,
@@ -27,6 +31,7 @@ namespace Click_Go.Services
                 ParentId = dto.ParentId,
                 UserId = userId,
                 CreatedDate = DateTime.Now,
+                CreatedUser = Guid.Parse(userId),
                 Status = 1
             };
 
@@ -48,6 +53,7 @@ namespace Click_Go.Services
                         Directory.CreateDirectory(directory);
                     }
 
+                    // Copy file vào ổ cứng
                     var fileCopyTask = Task.Run(async () =>
                     {
                         using (var stream = new FileStream(path, FileMode.Create))
@@ -60,27 +66,28 @@ namespace Click_Go.Services
 
                     images.Add(new Image
                     {
-                        ImagePath = $"/UploadedFiles/reviews/{fileName}",
+                        ImagePath = $"UploadedFiles/reviews/{fileName}",
                         CommentId = comment.Id,
-                        CreatedDate = DateTime.Now, 
+                        CreatedDate = DateTime.Now,
                         Status = 1,
                         CreatedUser = Guid.Parse(userId)
                     });
                 }
 
-                // Wait for all file copy tasks to complete
-                await Task.WhenAll(tasks);
-
+                await Task.WhenAll(tasks); // Chờ tất cả ảnh lưu xong
                 await _imageRepo.AddImagesAsync(images);
             }
 
 
-
         }
-
         public async Task<IEnumerable<Comment>> GetCommentsByPostIdAsync(long postId)
         {
             return await _commentRepo.GetByPostIdAsync(postId);
         }
     }
+
+
+
+      
 }
+

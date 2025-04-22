@@ -36,6 +36,7 @@ namespace Click_Go.Repositories
              .Where(c => c.PostId == postId)
              .Include(c => c.User)
              .Include(c => c.Images)
+             .Include(c => c.Reactions)
              .ToListAsync();
         }
 

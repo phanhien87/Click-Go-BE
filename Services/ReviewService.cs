@@ -21,6 +21,7 @@ namespace Click_Go.Services
 
         public async Task AddReviewAsync(ReviewRequestDto reviewRequestDto,string userId)
         {
+            
             CommentDto commentDto = new CommentDto
             {
                 PostId = reviewRequestDto.PostId,
@@ -48,6 +49,11 @@ namespace Click_Go.Services
 
                 await _ratingRepo.AddAsync(rating);
             }
+        }
+
+        public Task<IEnumerable<GetReviewByPostDto>> GetReviewsByPostAsync(int postId, string userId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

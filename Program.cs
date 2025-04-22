@@ -9,6 +9,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json.Serialization;
 using Click_Go.Helper;
+using Click_Go.Repositories.Interfaces;
+using Click_Go.Repositories;
+using Click_Go.Middleware;
 
 namespace Click_Go
 {
@@ -28,11 +31,23 @@ namespace Click_Go
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            
+
             //Register DI
+            builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+            builder.Services.AddScoped<IImageRepository, ImageRepository>();
+            builder.Services.AddScoped<IRatingRepository, RatingRepository>();
+            builder.Services.AddScoped<IReactRepository, ReactRepository>();
+
+
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<IImageService, ImageService>();
+            builder.Services.AddScoped<ICommentService, CommentService>();
+            builder.Services.AddScoped<IReactService, ReactService>();
+            
             builder.Services.AddScoped<SaveImage>();
+            builder.Services.AddScoped<UnitOfWork>();
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -89,6 +104,9 @@ namespace Click_Go
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<ExceptionMiddleware>();
+
 
             app.UseCors("AllowReactApp");
 

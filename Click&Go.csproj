@@ -21,10 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Helpers\" />
     <Folder Include="Migrations\" />
-    <Folder Include="UploadedFiles\" />
-    <Folder Include="Repositories\" />
+    <Folder Include="UploadedFiles\reviews\" />
   </ItemGroup>
 
 </Project>

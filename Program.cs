@@ -79,6 +79,11 @@ namespace Click_Go
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
                     ClockSkew = TimeSpan.Zero
                 };
+            })
+            .AddFacebook(options =>
+            {
+                options.AppId = builder.Configuration["Facebook:AppId"];
+                options.AppSecret = builder.Configuration["Facebook:AppSecret"];
             });
 
             builder.Services.AddCors(options =>

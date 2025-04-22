@@ -46,7 +46,7 @@ namespace Click_Go.Services
             return string.Join(", ", result.Errors.Select(e => e.Description));
         }
 
-        private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
+        public async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
         {
             // Lấy danh sách các role của user (ví dụ: "CUSTOMER", "ADMIN")
             var userRoles = await _userManager.GetRolesAsync(user);

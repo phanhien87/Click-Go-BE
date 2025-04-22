@@ -24,8 +24,19 @@ namespace Click_Go.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto model)
         {
-            var token = await _authService.LoginAsync(model);
-            return token == null ? Unauthorized() : Ok(new { token });
+            try
+            {
+                var token = await _authService.LoginAsync(model);
+                return Ok(new { token });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Error." });
+            }
         }
     }
 }

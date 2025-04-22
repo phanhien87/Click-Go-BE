@@ -61,7 +61,8 @@ namespace Click_Go
                     ValidateAudience = true,
                     ValidAudience = jwtSettings["Audience"],
                     ValidIssuer = jwtSettings["Issuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
+                    ClockSkew = TimeSpan.Zero
                 };
             });
 

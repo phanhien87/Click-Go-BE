@@ -23,12 +23,14 @@ namespace Click_Go.Services
         public async Task<string> LoginAsync(LoginDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                return await GenerateJwtTokenAsync(user);
-            }
+            if (user == null)
+                throw new UnauthorizedAccessException("Sai tên đăng nhập.");
 
-            return null;
+            var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
+            if (!passwordValid)
+                throw new UnauthorizedAccessException("Sai mật khẩu.");
+
+            return await GenerateJwtTokenAsync(user);
         }
 
         public async Task<string> RegisterAsync(RegisterDto model)

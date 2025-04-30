@@ -7,5 +7,7 @@ namespace Click_Go.Services.Interfaces
     {
         Task AddCommentAsync(CommentDto dto, string userId);
         Task<IEnumerable<Comment>> GetCommentsByPostIdAsync(long postId);
+
+        Task<List<GetCommentByPostDto>> GetCommentsByPostAsync(long postId);
     }
 }

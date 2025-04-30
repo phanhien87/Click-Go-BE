@@ -37,7 +37,7 @@ namespace Click_Go
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IRatingRepository, RatingRepository>();
             builder.Services.AddScoped<IReactRepository, ReactRepository>();
-
+           
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPostService, PostService>();

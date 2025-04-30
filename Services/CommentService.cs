@@ -80,9 +80,35 @@ namespace Click_Go.Services
 
 
         }
+
+        public async Task<List<GetCommentByPostDto>> GetCommentsByPostAsync(long postId)
+        {
+            var allComments = await _commentRepo.getCommentByPost(postId);
+           return await BuildCommentTree(allComments).ConfigureAwait(false);
+        }
+
         public async Task<IEnumerable<Comment>> GetCommentsByPostIdAsync(long postId)
         {
             return await _commentRepo.GetByPostIdAsync(postId);
+        }
+
+        private async Task<List<GetCommentByPostDto>> BuildCommentTree(List<Comment> allComments, long? parentId = null)
+        {
+            var comments = allComments.Where(c => c.ParentId == parentId)
+                               .OrderBy(c => c.CreatedDate);
+
+            var commentDtos = await Task.WhenAll(comments.Select(async c => new GetCommentByPostDto
+            {
+                CommentId = c.Id,
+                Content = c.Content,
+                UserName = c.User.UserName,
+                CreatedDate = c.CreatedDate,
+                UpdateDate = c.UpdatedDate,
+                ImagesUrl = c.Images.Select(c => c.ImagePath).ToList(),
+                Replies = await BuildCommentTree(allComments, c.Id)
+            }));
+
+            return commentDtos.ToList();
         }
     }
 

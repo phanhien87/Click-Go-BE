@@ -1,4 +1,5 @@
-﻿using Click_Go.Models;
+﻿using Click_Go.DTOs;
+using Click_Go.Models;
 
 namespace Click_Go.Repositories.Interfaces
 {
@@ -9,5 +10,7 @@ namespace Click_Go.Repositories.Interfaces
         Task<IEnumerable<Comment>> GetByPostIdAsync(long postId);
         Task DeleteAsync(long id);
         Task UpdateAsync(Comment comment);
+
+        Task<List<Comment>> getCommentByPost(long postId);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Click_Go.Data;
+using Click_Go.DTOs;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,11 @@ namespace Click_Go.Repositories
              .Include(c => c.Images)
              .Include(c => c.Reactions)
              .ToListAsync();
+        }
+
+        public async Task<List<Comment>> getCommentByPost(long postId)
+        {
+            return await _context.Comments.Include(u => u.User).Include(u => u.Images).Where(p => p.PostId == postId).ToListAsync();
         }
 
         public Task UpdateAsync(Comment comment)

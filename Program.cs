@@ -1,5 +1,4 @@
-﻿
-using Click_Go.Data;
+﻿using Click_Go.Data;
 using Click_Go.Models;
 using Click_Go.Services.Interfaces;
 using Click_Go.Services;
@@ -8,6 +7,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
+using Click_Go.Helper;
+using Click_Go.Repositories.Interfaces;
+using Click_Go.Repositories;
+using Click_Go.Middleware;
 
 namespace Click_Go
 {
@@ -19,14 +23,31 @@ namespace Click_Go
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            
-            //Register DI
-            builder.Services.AddScoped<IAuthService, AuthService>();
 
+            //Register DI
+            builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+            builder.Services.AddScoped<IImageRepository, ImageRepository>();
+            builder.Services.AddScoped<IRatingRepository, RatingRepository>();
+            builder.Services.AddScoped<IReactRepository, ReactRepository>();
+           
+
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<IImageService, ImageService>();
+            builder.Services.AddScoped<ICommentService, CommentService>();
+            builder.Services.AddScoped<IReactService, ReactService>();
+            
+            builder.Services.AddScoped<SaveImage>();
+            builder.Services.AddScoped<UnitOfWork>();
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -55,8 +76,14 @@ namespace Click_Go
                     ValidateAudience = true,
                     ValidAudience = jwtSettings["Audience"],
                     ValidIssuer = jwtSettings["Issuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
+                    ClockSkew = TimeSpan.Zero
                 };
+            })
+            .AddFacebook(options =>
+            {
+                options.AppId = builder.Configuration["Facebook:AppId"];
+                options.AppSecret = builder.Configuration["Facebook:AppSecret"];
             });
 
             builder.Services.AddCors(options =>
@@ -82,6 +109,9 @@ namespace Click_Go
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<ExceptionMiddleware>();
+
 
             app.UseCors("AllowReactApp");
 

@@ -23,16 +23,20 @@ namespace Click_Go.Services
         public async Task<string> LoginAsync(LoginDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                return await GenerateJwtTokenAsync(user);
-            }
+            if (user == null)
+                throw new UnauthorizedAccessException("Sai tên đăng nhập.");
 
-            return null;
+            var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
+            if (!passwordValid)
+                throw new UnauthorizedAccessException("Sai mật khẩu.");
+
+            return await GenerateJwtTokenAsync(user);
         }
 
         public async Task<string> RegisterAsync(RegisterDto model)
         {
+            var existedEmail = await _userManager.FindByEmailAsync(model.Email);
+            if (existedEmail != null) return "Existed Email!";
             var user = new ApplicationUser { UserName = model.Email.Split('@')[0], Email = model.Email, FullName = model.FullName };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
@@ -44,7 +48,7 @@ namespace Click_Go.Services
             return string.Join(", ", result.Errors.Select(e => e.Description));
         }
 
-        private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
+        public async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
         {
             // Lấy danh sách các role của user (ví dụ: "CUSTOMER", "ADMIN")
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -53,6 +57,7 @@ namespace Click_Go.Services
             var authClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 

@@ -35,10 +35,22 @@ namespace Click_Go.Middleware
             var statusCode = HttpStatusCode.InternalServerError;
             string message = "Internal Server Error. Please contact support.";
 
-            if (exception is AppException)
+            switch (exception)
             {
-                statusCode = HttpStatusCode.Conflict; // 409
-                message = exception.Message;
+                case AppException ex:
+                    statusCode = HttpStatusCode.Conflict; // 409
+                    message = ex.Message;
+                    break;
+
+                case NotFoundException ex:
+                    statusCode = HttpStatusCode.NotFound; // 404
+                    message = ex.Message;
+                    break;
+
+                case UnauthorizedAccessException ex:
+                    statusCode = HttpStatusCode.Unauthorized; // 401
+                    message = ex.Message;
+                    break;
             }
 
             context.Response.StatusCode = (int)statusCode;

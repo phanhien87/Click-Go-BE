@@ -1,4 +1,8 @@
-﻿namespace Click_Go.Middleware
+﻿using Click_Go.Helper;
+using System.Net;
+using System.Text.Json;
+
+namespace Click_Go.Middleware
 {
     public class ExceptionMiddleware
     {
@@ -15,26 +19,39 @@
         {
             try
             {
-                await _next(httpContext); // chạy tiếp middleware tiếp theo
+                await _next(httpContext);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Something went wrong: {ex}");
+                _logger.LogError(ex, "Unhandled exception caught in middleware.");
                 await HandleExceptionAsync(httpContext, ex);
             }
         }
 
-        private Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            return context.Response.WriteAsync(new
+            var statusCode = HttpStatusCode.InternalServerError;
+            string message = "Internal Server Error. Please contact support.";
+
+            if (exception is AppException)
+            {
+                statusCode = HttpStatusCode.Conflict; // 409
+                message = exception.Message;
+            }
+
+            context.Response.StatusCode = (int)statusCode;
+
+            var response = new
             {
                 StatusCode = context.Response.StatusCode,
-                Message = "Internal Server Error. Please contact support.",
-                Detail = exception.Message
-            }.ToString()!); // nên dùng System.Text.Json để serialize đúng
+                Message = message
+            };
+
+            var json = JsonSerializer.Serialize(response);
+
+            await context.Response.WriteAsync(json);
         }
     }
 }

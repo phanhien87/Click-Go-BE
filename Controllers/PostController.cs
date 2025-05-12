@@ -48,29 +48,15 @@ namespace Click_Go.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var createdPost = await _postService.CreatePostAsync(postDto, userId);
+            var createdPost = await _postService.CreatePostAsync(postDto, userId);
+            var postReadDto = MapPostToReadDto(createdPost);
 
-                // **Map Entity to DTO**
-                var postReadDto = MapPostToReadDto(createdPost);
-
-                _logger.LogInformation("Post created successfully with ID: {PostId}", postReadDto.Id);
-                return CreatedAtAction(nameof(GetPostById), new { id = postReadDto.Id }, postReadDto);
-            }
-            catch (ArgumentException ex) // Specific exception from service
-            {
-                _logger.LogError(ex, "Argument error during post creation for user {UserId}. DTO: {@PostDto}", userId, postDto);
-                return BadRequest(new ProblemDetails { Title = "Invalid Input", Detail = ex.Message });
-            }
-            catch (Exception ex) // Catch broader exceptions
-            {
-                _logger.LogError(ex, "An unexpected error occurred while creating post for user {UserId}. DTO: {@PostDto}", userId, postDto);
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred. Please try again later." });
-            }
+            _logger.LogInformation("Post created successfully with ID: {PostId}", postReadDto.Id);
+            return CreatedAtAction(nameof(GetPostById), new { id = postReadDto.Id }, postReadDto);
         }
 
-        
+
+
         [HttpGet("{id}")]//GetPostByPostID
         [ProducesResponseType(typeof(PostReadDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

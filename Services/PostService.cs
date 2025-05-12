@@ -30,16 +30,21 @@ namespace Click_Go.Services
 
         public async Task<Post> CreatePostAsync(PostCreateDto postDto, string userId)
         {
+            var existedPost = await GetPostsByUserIdAsync(userId);
+            if (existedPost.Count() != 0)
+            {
+                throw new AppException("User already has a post.");
+            }
             // Basic validation
             if (string.IsNullOrWhiteSpace(postDto.Name) || postDto.CategoryId <= 0)
             {
-                throw new ArgumentException("Post name and category ID are required.");
+                throw new AppException("Post name and category ID are required.");
             }
 
             var category = await _context.Categories.FindAsync(postDto.CategoryId);
             if (category == null)
             {
-                throw new ArgumentException("Invalid Category ID.");
+                throw new AppException("Invalid Category ID.");
             }
 
             var post = new Post

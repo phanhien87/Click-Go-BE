@@ -37,6 +37,9 @@ namespace Click_Go
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IRatingRepository, RatingRepository>();
             builder.Services.AddScoped<IReactRepository, ReactRepository>();
+            builder.Services.AddScoped<IUserPackageRepository, UserPackageRepository>();
+            builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
            
 
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -45,7 +48,12 @@ namespace Click_Go
             builder.Services.AddScoped<IImageService, ImageService>();
             builder.Services.AddScoped<ICommentService, CommentService>();
             builder.Services.AddScoped<IReactService, ReactService>();
-            
+            builder.Services.AddScoped<IPackageService, PackageService>();
+
+            builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
+            builder.Services.AddScoped<PayOSService>();
+
+
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();
 
@@ -85,7 +93,7 @@ namespace Click_Go
                 options.AppId = builder.Configuration["Facebook:AppId"];
                 options.AppSecret = builder.Configuration["Facebook:AppSecret"];
             });
-
+             
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowReactApp",
@@ -99,7 +107,17 @@ namespace Click_Go
 
 
             builder.Services.AddAuthorization();
-           
+
+
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
+            builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
 
@@ -119,11 +137,14 @@ namespace Click_Go
             {
                 app.UseHttpsRedirection();
             }
+            
+            app.UseSession();
 
             app.UseAuthentication();
             
             app.UseAuthorization();
 
+           
 
             app.MapControllers();
 

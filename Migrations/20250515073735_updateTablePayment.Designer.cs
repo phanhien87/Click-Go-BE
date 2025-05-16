@@ -4,6 +4,7 @@ using Click_Go.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Click_Go.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250515073735_updateTablePayment")]
+    partial class updateTablePayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -332,7 +335,7 @@ namespace Click_Go.Migrations
                     b.ToTable("OpeningHours");
                 });
 
-            modelBuilder.Entity("Click_Go.Models.Order", b =>
+            modelBuilder.Entity("Click_Go.Models.Payment", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -352,24 +355,17 @@ namespace Click_Go.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CREATED_USER");
 
-                    b.Property<string>("OrderCode")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("PackageId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TransactionId")
+                    b.Property<string>("ReferenceId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("STATUS");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2")
@@ -385,58 +381,9 @@ namespace Click_Go.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PackageId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders");
-                });
-
-            modelBuilder.Entity("Click_Go.Models.Package", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("ID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CREATED_DATE");
-
-                    b.Property<Guid?>("CreatedUser")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("CREATED_USER");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DurationDays")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("Price")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("Status")
-                        .HasColumnType("int")
-                        .HasColumnName("STATUS");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("UPDATED_DATE");
-
-                    b.Property<Guid?>("UpdatedUser")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("UPDATED_USER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Packages");
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("Click_Go.Models.Post", b =>
@@ -597,57 +544,6 @@ namespace Click_Go.Migrations
                     b.HasIndex("RatingId");
 
                     b.ToTable("RatingDetails");
-                });
-
-            modelBuilder.Entity("Click_Go.Models.UserPackage", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("ID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CREATED_DATE");
-
-                    b.Property<Guid?>("CreatedUser")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("CREATED_USER");
-
-                    b.Property<DateTime>("ExpireDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("OrderId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("Status")
-                        .HasColumnType("int")
-                        .HasColumnName("STATUS");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("UPDATED_DATE");
-
-                    b.Property<Guid?>("UpdatedUser")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("UPDATED_USER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserPackages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -851,21 +747,13 @@ namespace Click_Go.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("Click_Go.Models.Order", b =>
+            modelBuilder.Entity("Click_Go.Models.Payment", b =>
                 {
-                    b.HasOne("Click_Go.Models.Package", "Package")
-                        .WithMany()
-                        .HasForeignKey("PackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Click_Go.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Package");
 
                     b.Navigation("User");
                 });
@@ -913,25 +801,6 @@ namespace Click_Go.Migrations
                         .HasForeignKey("RatingId");
 
                     b.Navigation("Rating");
-                });
-
-            modelBuilder.Entity("Click_Go.Models.UserPackage", b =>
-                {
-                    b.HasOne("Click_Go.Models.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Click_Go.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

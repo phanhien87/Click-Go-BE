@@ -4,6 +4,7 @@ using Click_Go.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Click_Go.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250516043045_updateUserPackageAddOrder")]
+    partial class updateUserPackageAddOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -622,6 +625,9 @@ namespace Click_Go.Migrations
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("PackageId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -644,6 +650,8 @@ namespace Click_Go.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("PackageId");
 
                     b.HasIndex("UserId");
 
@@ -923,6 +931,10 @@ namespace Click_Go.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Click_Go.Models.Package", null)
+                        .WithMany("UserPackages")
+                        .HasForeignKey("PackageId");
+
                     b.HasOne("Click_Go.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1003,6 +1015,11 @@ namespace Click_Go.Migrations
                     b.Navigation("Reactions");
 
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Click_Go.Models.Package", b =>
+                {
+                    b.Navigation("UserPackages");
                 });
 
             modelBuilder.Entity("Click_Go.Models.Post", b =>

@@ -4,6 +4,7 @@ using Click_Go.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Click_Go.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250515172627_updateTablePackage2")]
+    partial class updateTablePackage2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -332,66 +335,6 @@ namespace Click_Go.Migrations
                     b.ToTable("OpeningHours");
                 });
 
-            modelBuilder.Entity("Click_Go.Models.Order", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("ID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("Amount")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CREATED_DATE");
-
-                    b.Property<Guid?>("CreatedUser")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("CREATED_USER");
-
-                    b.Property<string>("OrderCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("PackageId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TransactionId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("UPDATED_DATE");
-
-                    b.Property<Guid?>("UpdatedUser")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("UPDATED_USER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PackageId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Orders");
-                });
-
             modelBuilder.Entity("Click_Go.Models.Package", b =>
                 {
                     b.Property<long>("Id")
@@ -608,6 +551,9 @@ namespace Click_Go.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("CREATED_DATE");
@@ -619,7 +565,7 @@ namespace Click_Go.Migrations
                     b.Property<DateTime>("ExpireDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("OrderId")
+                    b.Property<long>("PackageId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("StartDate")
@@ -643,7 +589,7 @@ namespace Click_Go.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("PackageId");
 
                     b.HasIndex("UserId");
 
@@ -851,25 +797,6 @@ namespace Click_Go.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("Click_Go.Models.Order", b =>
-                {
-                    b.HasOne("Click_Go.Models.Package", "Package")
-                        .WithMany()
-                        .HasForeignKey("PackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Click_Go.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Package");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Click_Go.Models.Post", b =>
                 {
                     b.HasOne("Click_Go.Models.Category", "Category")
@@ -917,9 +844,9 @@ namespace Click_Go.Migrations
 
             modelBuilder.Entity("Click_Go.Models.UserPackage", b =>
                 {
-                    b.HasOne("Click_Go.Models.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
+                    b.HasOne("Click_Go.Models.Package", "Package")
+                        .WithMany("UserPackages")
+                        .HasForeignKey("PackageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -929,7 +856,7 @@ namespace Click_Go.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Order");
+                    b.Navigation("Package");
 
                     b.Navigation("User");
                 });
@@ -1003,6 +930,11 @@ namespace Click_Go.Migrations
                     b.Navigation("Reactions");
 
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Click_Go.Models.Package", b =>
+                {
+                    b.Navigation("UserPackages");
                 });
 
             modelBuilder.Entity("Click_Go.Models.Post", b =>

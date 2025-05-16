@@ -18,5 +18,8 @@ namespace Click_Go.Data
         public DbSet<RatingDetail> RatingDetails { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<CommentReaction> CommentReactions { get; set; }
+        public DbSet<UserPackage> UserPackages { get; set; }
+        public DbSet<Package> Packages { get; set; }
+        public DbSet<Order> Orders { get; set; }
     }
 }

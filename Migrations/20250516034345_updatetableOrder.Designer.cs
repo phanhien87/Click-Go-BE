@@ -4,6 +4,7 @@ using Click_Go.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Click_Go.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250516034345_updatetableOrder")]
+    partial class updatetableOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -359,9 +362,6 @@ namespace Click_Go.Migrations
                     b.Property<long>("PackageId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime?>("PaymentDate")
                         .HasColumnType("datetime2");
 
@@ -608,6 +608,9 @@ namespace Click_Go.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("CREATED_DATE");
@@ -619,7 +622,10 @@ namespace Click_Go.Migrations
                     b.Property<DateTime>("ExpireDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("OrderId")
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PackageId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("StartDate")
@@ -643,7 +649,7 @@ namespace Click_Go.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("PackageId");
 
                     b.HasIndex("UserId");
 
@@ -917,9 +923,9 @@ namespace Click_Go.Migrations
 
             modelBuilder.Entity("Click_Go.Models.UserPackage", b =>
                 {
-                    b.HasOne("Click_Go.Models.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
+                    b.HasOne("Click_Go.Models.Package", "Package")
+                        .WithMany("UserPackages")
+                        .HasForeignKey("PackageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -929,7 +935,7 @@ namespace Click_Go.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Order");
+                    b.Navigation("Package");
 
                     b.Navigation("User");
                 });
@@ -1003,6 +1009,11 @@ namespace Click_Go.Migrations
                     b.Navigation("Reactions");
 
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Click_Go.Models.Package", b =>
+                {
+                    b.Navigation("UserPackages");
                 });
 
             modelBuilder.Entity("Click_Go.Models.Post", b =>

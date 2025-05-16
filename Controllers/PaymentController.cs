@@ -4,13 +4,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Net.payOS;
+using Net.payOS.Types;
 using System.Security.Claims;
 
 namespace Click_Go.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "CUSTOMER")]
+   
     public class PaymentController : ControllerBase
     {
         private readonly PayOSService _payOSService;
@@ -21,30 +23,46 @@ namespace Click_Go.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequest request)
+        [Authorize(Roles = "CUSTOMER")]
+        public async Task<IActionResult> CreatePayment([FromBody] PaymentRequestDto request)
         {
          
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
-            var url = await _payOSService.CreatePaymentLink(
-                request.Amount, request.Description,request.ReturnUrl  ,request.CancelUrl, request.level
-            );
+            var url = await _payOSService.CreatePaymentLink(request.PackageId, request.ReturnUrl, request.CancelUrl,userId);
 
             return Ok( url );
         }
-
+        [AllowAnonymous]
         [HttpPost("webhook")]
-        public async Task<IActionResult> PayOSWebhook([FromBody] CreatePaymentLinkDto request)
+        public async Task<IActionResult> PayOSWebhook([FromBody] WebhookType request)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var status = await _payOSService.ConfirmPayment(request, userId);
-            if (status)
+            if (!ModelState.IsValid)
             {
-                // Trả về JSON báo thành công
-                return Ok(new { success = true, message = "Thanh toán thành công" });
+                return BadRequest(ModelState);
             }
 
-            return Ok(new { success = false, message = "Thanh toán thất bại" });
+            try
+            {
+               
+                var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier); // có thể null
+                var status = await _payOSService.ConfirmPayment(request, userId);
+
+                if (status)
+                {
+                    return Ok(new { success = true, message = "Thanh toán thành công" });
+                }
+
+                return Ok(new { success = false, message = "Thanh toán thất bại" });
+            }
+            catch (Exception ex)
+            {
+              
+                Console.WriteLine("Lỗi trong webhook: " + ex.ToString());
+
+                
+                return StatusCode(500, new { error = ex.Message, detail = ex.ToString() });
+            }
         }
 
     }

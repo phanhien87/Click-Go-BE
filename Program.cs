@@ -37,7 +37,9 @@ namespace Click_Go
             builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IRatingRepository, RatingRepository>();
             builder.Services.AddScoped<IReactRepository, ReactRepository>();
-            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+            builder.Services.AddScoped<IUserPackageRepository, UserPackageRepository>();
+            builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
            
 
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -46,6 +48,7 @@ namespace Click_Go
             builder.Services.AddScoped<IImageService, ImageService>();
             builder.Services.AddScoped<ICommentService, CommentService>();
             builder.Services.AddScoped<IReactService, ReactService>();
+            builder.Services.AddScoped<IPackageService, PackageService>();
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
             builder.Services.AddScoped<PayOSService>();

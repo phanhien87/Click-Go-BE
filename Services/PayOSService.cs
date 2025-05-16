@@ -1,4 +1,5 @@
-﻿using Click_Go.DTOs;
+﻿using Azure.Core;
+using Click_Go.DTOs;
 using Click_Go.Helper;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
@@ -13,77 +14,124 @@ using System.Security.Claims;
 public class PayOSService
 {
     private readonly PayOS _payOS;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IPaymentRepository _paymentRepository;
+   private readonly IPackageRepository _packageRepository;
+    private readonly IUserPackageRepository _userPackageRepository;
+    private readonly IOrderRepository _orderRepository;
     private readonly UserManager<ApplicationUser> _userManager;
-    public PayOSService(IOptions<PayOSOptions> options, IHttpContextAccessor httpContextAccessor, IPaymentRepository paymentRepository, UserManager<ApplicationUser> userManager)
+    public PayOSService(IOptions<PayOSOptions> options, IHttpContextAccessor httpContextAccessor,
+        UserManager<ApplicationUser> userManager, IUserPackageRepository userPackageRepository,
+        IPackageRepository packageRepository, IOrderRepository orderRepository)
     {
         var opts = options.Value;
         _payOS = new PayOS(opts.ClientId, opts.ApiKey, opts.ChecksumKey);
-        _httpContextAccessor = httpContextAccessor;
-        _paymentRepository = paymentRepository;
+        _packageRepository = packageRepository;
+        _userPackageRepository = userPackageRepository; 
         _userManager = userManager;
+        _orderRepository = orderRepository;
     }
 
-    public async Task<CreatePaymentLinkDto> CreatePaymentLink(int amount, string description, string returnUrl,
-        string cancelUrl, int? level)
+    public async Task<string> CreatePaymentLink(long packageId, string returnUrl, string cancelUrl,string userId)
     {
-        if (amount < 1000)
-            throw new AppException("Số tiền phải >= 1,000 VND");
+        var package = await _packageRepository.GetPackageByIdAsync(packageId);
+        var amountStr = package.Price.ToString();
+        var amount = int.Parse(amountStr);
 
-        // Tạo số nguyên dương ngẫu nhiên dài đủ 13-15 chữ số
-        var ticks = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(); // ~13 chữ số
-        var random = new Random().Next(100, 999); // Thêm vài chữ số ngẫu nhiên
-        var orderCode = long.Parse($"{ticks}{random}");
 
-       
+        var orderCode = await GenerateUniqueOrderCodeAsync();
+
+
+        var order = new Order
+        {
+            OrderCode = orderCode.ToString(),
+            UserId = userId,
+            PackageId = packageId,
+            Amount = amount,
+            Status = Click_Go.Enum.OrderStatus.Pending,
+            CreatedDate = DateTime.UtcNow,
+            CreatedUser = Guid.Parse(userId),
+        };
         
-        PaymentData paymentData = new PaymentData(orderCode, amount, description, null
+        await _orderRepository.AddAsync(order);
+
+        PaymentData paymentData = new PaymentData(orderCode, amount, package.Name, null
               , cancelUrl, returnUrl);
 
         CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
 
 
-        return new CreatePaymentLinkDto
-        {
-            url = createPayment.checkoutUrl,
-            orderCode = orderCode,
-            amount = amount,
-            description = description,
-            level = level,
-        };
+        return createPayment.checkoutUrl;
+       
     }
 
-    public async Task<Boolean> ConfirmPayment(CreatePaymentLinkDto request,string userId)
-    {
 
-        var amount = request.amount;
-        var description = request.description;
-        var orderCodeStr =request.orderCode;
-        var level = request.level;
-        var user = await _userManager.FindByIdAsync(userId);
-        user.Level = level;
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
+    public async Task<bool> ConfirmPayment(WebhookType request, string userId)
+    {
+        try
         {
-            // Xử lý lỗi cập nhật
-            throw new Exception("Cập nhật user thất bại: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+            if (request.success)
+            {
+                var order = await _orderRepository.GetByCodeAsync(request.data.orderCode);
+                if (order == null || order.Status == Click_Go.Enum.OrderStatus.Paid)
+                {
+                    return false;
+                }
+
+                order.Status = Click_Go.Enum.OrderStatus.Paid;
+                order.PaidAt = DateTime.UtcNow;
+                order.PaymentDate = DateTime.UtcNow;
+                order.TransactionId = request.data.reference;
+
+                if (order.Package == null)
+                {
+                    throw new Exception("order.Package is null");
+                }
+
+                await _orderRepository.UpdateAsync(order);
+
+                var userpackage = new UserPackage
+                {
+                    UserId = order.UserId,
+                    OrderId = order.Id,
+                    StartDate = DateTime.Now,
+                    ExpireDate = DateTime.Now.AddDays(order.Package.DurationDays),
+                    CreatedDate = DateTime.Now,
+                    CreatedUser = Guid.Parse(order.UserId),
+                    Status = 1
+                };
+
+                await _userPackageRepository.AddAsync(userpackage);
+
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log lỗi ra console, file hoặc hệ thống log
+            Console.WriteLine($"[ConfirmPayment Error] {ex.Message}");
+            // Hoặc logger.LogError(ex, "Lỗi khi xác nhận thanh toán");
+
+            
         }
 
-        var payment = new Payment
-        {
-            UserId = userId,
-            Amount = amount,
-            Description = description,
-            ReferenceId = orderCodeStr.ToString(),
-            CreatedDate = DateTime.Now,
-            CreatedUser = Guid.Parse(userId),
-            Status = 1
-        };
-       await _paymentRepository.AddPayment(payment);
-        return true;
+        return false;
     }
 
+    public async Task<long> GenerateUniqueOrderCodeAsync()
+    {
+        long orderCode;
+        Order existedCode;
+
+        do
+        {
+            var ticks = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var random = new Random().Next(100, 999);
+            orderCode = long.Parse($"{ticks}{random}");
+
+            existedCode = await _orderRepository.GetByCodeAsync(orderCode);
+        } while (existedCode != null);
+
+        return orderCode;
+    }
 
 
 }

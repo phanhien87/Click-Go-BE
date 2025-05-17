@@ -1,30 +1,30 @@
 ﻿using Click_Go.DTOs;
-using Click_Go.Models; // Needed for mapping
+using Click_Go.Models; 
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging; // Add logger namespace
+using Microsoft.Extensions.Logging; 
 using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Collections.Generic; // For List
+using System.Collections.Generic; 
 
 namespace Click_Go.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Require authentication for all actions in this controller
+    [Authorize] 
     public class PostController : ControllerBase
     {
         private readonly IPostService _postService;
-        private readonly ILogger<PostController> _logger; // Inject logger
+        private readonly ILogger<PostController> _logger;
 
         public PostController(IPostService postService, ILogger<PostController> logger)
         {
             _postService = postService;
-            _logger = logger; // Assign logger
+            _logger = logger; 
         }
 
         [HttpPost]
@@ -32,6 +32,8 @@ namespace Click_Go.Controllers
         [ProducesResponseType(typeof(PostReadDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)] 
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreatePost([FromForm] PostCreateDto postDto)
         {
@@ -55,39 +57,21 @@ namespace Click_Go.Controllers
             return CreatedAtAction(nameof(GetPostById), new { id = postReadDto.Id }, postReadDto);
         }
 
-
-
         [HttpGet("{id}")]//GetPostByPostID
         [ProducesResponseType(typeof(PostReadDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)] 
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)] 
         public async Task<IActionResult> GetPostById(long id)
         {
-            try
-            {
-                var post = await _postService.GetPostByIdAsync(id);
-
-                if (post == null)
-                {
-                    _logger.LogInformation("GetPostById request for ID {PostId} returned null.", id);
-                    return NotFound(new ProblemDetails { Title = "Not Found", Detail = $"Post with ID {id} not found." });
-                }
-
-                // Map Entity to DTO
-                var postReadDto = MapPostToReadDto(post);
-
-                return Ok(postReadDto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unexpected error occurred while retrieving post with ID {PostId}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred. Please try again later." });
-            }
+            var post = await _postService.GetPostByIdAsync(id);
+            var postReadDto = MapPostToReadDto(post);
+            return Ok(postReadDto);
         }
 
         [HttpGet("MyPosts")] // Get current user's posts
         [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetMyPosts()
         {
@@ -98,21 +82,11 @@ namespace Click_Go.Controllers
                 return Unauthorized(new ProblemDetails { Title = "Unauthorized", Detail = "User ID not found in token." });
             }
 
-            try
-            {
-                var posts = await _postService.GetPostsByUserIdAsync(userId);
+            var posts = await _postService.GetPostsByUserIdAsync(userId);
+            var postReadDtos = posts.Select(post => MapPostToReadDto(post)).ToList();
 
-                // Map the list of entities to a list of DTOs
-                var postReadDtos = posts.Select(post => MapPostToReadDto(post)).ToList();
-
-                _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postReadDtos.Count, userId);
-                return Ok(postReadDtos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unexpected error occurred while retrieving posts for user {UserId}", userId);
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred. Please try again later." });
-            }
+            _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postReadDtos.Count, userId);
+            return Ok(postReadDtos);
         }
 
         // --- Helper Method for Mapping --- 

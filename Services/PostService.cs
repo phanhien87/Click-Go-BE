@@ -3,6 +3,7 @@ using Click_Go.DTOs;
 using Click_Go.Models;
 using Click_Go.Helper;
 using Click_Go.Services.Interfaces;
+using Click_Go.Repositories.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -18,33 +19,36 @@ namespace Click_Go.Services
     public class PostService : IPostService
     {
         private readonly SaveImage _saveImageHelper;
-        private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IPostRepository _postRepository;
 
-        public PostService(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, SaveImage saveImageHelper)
+        public PostService(
+            IWebHostEnvironment webHostEnvironment, 
+            SaveImage saveImageHelper, 
+            IPostRepository postRepository)
         {
-            _context = context;
             _webHostEnvironment = webHostEnvironment;
             _saveImageHelper = saveImageHelper;
+            _postRepository = postRepository;
         }
 
         public async Task<Post> CreatePostAsync(PostCreateDto postDto, string userId)
         {
-            var existedPost = await GetPostsByUserIdAsync(userId);
-            if (existedPost.Count() != 0)
+            var existingPosts = await _postRepository.GetByUserIdAsync(userId);
+            if (existingPosts.Any())
             {
                 throw new AppException("User already has a post.");
             }
-            // Basic validation
+
             if (string.IsNullOrWhiteSpace(postDto.Name) || postDto.CategoryId <= 0)
             {
                 throw new AppException("Post name and category ID are required.");
             }
 
-            var category = await _context.Categories.FindAsync(postDto.CategoryId);
+            var category = await _postRepository.GetCategoryByIdAsync(postDto.CategoryId);
             if (category == null)
             {
-                throw new AppException("Invalid Category ID.");
+                throw new NotFoundException("Invalid Category ID.");
             }
 
             var post = new Post
@@ -55,28 +59,24 @@ namespace Click_Go.Services
                 Address = postDto.Address,
                 Description = postDto.Description,
                 CategoryId = postDto.CategoryId,
-                UserId = userId, 
+                UserId = userId,
                 Images = new List<Image>(),
-                Opening_Hours = new List<OpeningHour>(), 
+                Opening_Hours = new List<OpeningHour>(),
                 CreatedDate = DateTime.UtcNow,
                 Status = 1,
                 CreatedUser = Guid.Parse(userId)
-
             };
 
-            // Handle Logo Image Upload
             if (postDto.LogoImage != null)
             {
                 post.Logo_Image = await _saveImageHelper.SaveFileAsync(postDto.LogoImage, "logos");
             }
 
-            // Handle Background Image Upload
             if (postDto.BackgroundImage != null)
             {
                 post.Background = await _saveImageHelper.SaveFileAsync(postDto.BackgroundImage, "backgrounds");
             }
 
-            // Handle Other Images Upload
             if (postDto.OtherImages != null && postDto.OtherImages.Any())
             {
                 foreach (var imageFile in postDto.OtherImages)
@@ -85,25 +85,21 @@ namespace Click_Go.Services
                     post.Images.Add(new Image
                     {
                         ImagePath = imagePath,
-                        CommentId = null, // Image is for the post, not a comment
+                        CommentId = null,
                         CreatedDate = DateTime.UtcNow,
                         UpdatedDate = DateTime.UtcNow
                     });
                 }
             }
 
-            // Handle Opening Hours
             if (postDto.OpeningHours != null && postDto.OpeningHours.Any())
             {
                 foreach (var ohDto in postDto.OpeningHours)
                 {
-                    // Basic validation for opening hours
                     if (string.IsNullOrWhiteSpace(ohDto.DayOfWeek) ||
                         ohDto.OpenHour < 0 || ohDto.OpenHour > 23 || ohDto.OpenMinute < 0 || ohDto.OpenMinute > 59 ||
                         ohDto.CloseHour < 0 || ohDto.CloseHour > 23 || ohDto.CloseMinute < 0 || ohDto.CloseMinute > 59)
                     {
-                        // Optionally throw an exception or handle invalid data
-                        // For now, we'll just skip invalid entries
                         continue;
                     }
 
@@ -114,51 +110,34 @@ namespace Click_Go.Services
                         OpenMinute = ohDto.OpenMinute,
                         CloseHour = ohDto.CloseHour,
                         CloseMinute = ohDto.CloseMinute,
-                        // PostId will be set automatically by EF Core relationship
                         CreatedDate = DateTime.UtcNow,
                         UpdatedDate = DateTime.UtcNow
                     });
                 }
             }
 
-            _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
-
-            return post;
+            return await _postRepository.CreateAsync(post);
         }
 
         public async Task<Post> GetPostByIdAsync(long id)
         {
-            // Use Include to eagerly load related data needed for the DTO
-            var post = await _context.Posts
-                .Include(p => p.Category)
-                .Include(p => p.User)
-                .Include(p => p.Images)
-                .Include(p => p.Opening_Hours)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            return post; // Controller will handle null check (NotFound)
+            var post = await _postRepository.GetByIdAsync(id);
+            if (post == null)
+            {
+                throw new NotFoundException($"Post with ID {id} not found.");
+            }
+            return post;
         }
 
         public async Task<IEnumerable<Post>> GetPostsByUserIdAsync(string userId)
         {
             if (string.IsNullOrEmpty(userId))
             {
-                // Or throw an ArgumentNullException, depending on desired behavior
-                return Enumerable.Empty<Post>(); 
+                throw new AppException("User ID cannot be null or empty when fetching user posts.");
             }
 
-            // Use Include to eagerly load related data needed for the DTO
-            var posts = await _context.Posts
-                .Where(p => p.UserId == userId)
-                .Include(p => p.Category)
-                .Include(p => p.User) // Technically redundant if filtering by UserId, but good practice
-                .Include(p => p.Images)
-                .Include(p => p.Opening_Hours)
-                .ToListAsync(); // Fetch the list of posts
-
+            var posts = await _postRepository.GetByUserIdAsync(userId);
             return posts;
         }
-
     }
 } 

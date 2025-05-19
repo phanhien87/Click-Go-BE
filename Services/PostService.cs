@@ -21,15 +21,20 @@ namespace Click_Go.Services
         private readonly SaveImage _saveImageHelper;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IPostRepository _postRepository;
-
+        private readonly ICommentService _commentService;
+        private readonly IRatingRepository _ratingRepository;
         public PostService(
             IWebHostEnvironment webHostEnvironment, 
             SaveImage saveImageHelper, 
-            IPostRepository postRepository)
+            IPostRepository postRepository,
+            IRatingRepository ratingRepository,
+            ICommentService commentService)
         {
             _webHostEnvironment = webHostEnvironment;
             _saveImageHelper = saveImageHelper;
             _postRepository = postRepository;
+            _commentService = commentService;
+            _ratingRepository = ratingRepository;
         }
 
         public async Task<Post> CreatePostAsync(PostCreateDto postDto, string userId)
@@ -119,14 +124,17 @@ namespace Click_Go.Services
             return await _postRepository.CreateAsync(post);
         }
 
-        public async Task<Post> GetPostByIdAsync(long id)
+        public async Task<GetPostDto> GetPostByIdAsync(long id)
         {
             var post = await _postRepository.GetByIdAsync(id);
             if (post == null)
             {
                 throw new NotFoundException($"Post with ID {id} not found.");
             }
-            return post;
+            var postReadDto = MapPostToReadDto(post);
+            var comment = await _commentService.GetCommentsByPostAsync(id);
+            var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(id);
+            return new GetPostDto { Comment = comment, Post = postReadDto, Rating = overallRating};
         }
 
         public async Task<IEnumerable<Post>> GetPostsByUserIdAsync(string userId)
@@ -139,5 +147,48 @@ namespace Click_Go.Services
             var posts = await _postRepository.GetByUserIdAsync(userId);
             return posts;
         }
+
+        private PostReadDto MapPostToReadDto(Post post)
+        {
+            // Handle potential null navigation properties
+            return new PostReadDto
+            {
+                Id = post.Id,
+                Name = post.Name,
+                Title = post.Title,
+                Logo_Image = post.Logo_Image,
+                Background = post.Background,
+                SDT = post.SDT,
+                Address = post.Address,
+                Description = post.Description,
+                CreatedDate = post.CreatedDate,
+                UpdatedDate = post.UpdatedDate,
+                Category = post.Category != null ? new CategoryDto
+                {
+                    Id = post.Category.Id,
+                    Name = post.Category.Name
+                } : null,
+                User = post.User != null ? new UserDto
+                {
+                    Id = post.User.Id,
+                    UserName = post.User.UserName,
+                    FullName = post.User.FullName
+                } : null,
+                OpeningHours = post.Opening_Hours?.Select(oh => new OpeningHourDto
+                {
+                    DayOfWeek = oh.DayOfWeek,
+                    OpenHour = oh.OpenHour ?? 0, // Provide default if nullable
+                    OpenMinute = oh.OpenMinute ?? 0,
+                    CloseHour = oh.CloseHour ?? 0,
+                    CloseMinute = oh.CloseMinute ?? 0
+                }).ToList() ?? new List<OpeningHourDto>(),
+                Images = post.Images?.Select(img => new ImageDto
+                {
+                    Id = img.Id,
+                    ImagePath = img.ImagePath
+                }).ToList() ?? new List<ImageDto>()
+            };
+        }
+
     }
 } 

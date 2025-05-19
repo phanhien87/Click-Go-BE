@@ -64,8 +64,7 @@ namespace Click_Go.Controllers
         public async Task<IActionResult> GetPostById(long id)
         {
             var post = await _postService.GetPostByIdAsync(id);
-            var postReadDto = MapPostToReadDto(post);
-            return Ok(postReadDto);
+            return Ok(post);
         }
 
         [HttpGet("MyPosts")] // Get current user's posts

@@ -34,7 +34,11 @@ namespace Click_Go.Services
             }
             else
             {
-                if (dto.IsLike == null) await _reactRepository.RemoveAsync(existReactComment.Id);
+                if (dto.IsLike == null)
+                {
+                    await _reactRepository.RemoveAsync(existReactComment.Id);
+                    return;
+                }
                existReactComment.UpdatedDate = DateTime.Now;
                existReactComment.UpdatedUser = Guid.Parse(userId);
                existReactComment.IsLike = dto.IsLike;

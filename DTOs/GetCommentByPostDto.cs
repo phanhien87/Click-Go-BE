@@ -11,7 +11,9 @@ namespace Click_Go.DTOs
         public DateTime? CreatedDate { get; set; }
         public DateTime? UpdateDate { get; set; }
         public List<string>? ImagesUrl { get; set; }
+        public bool? IsLike { get; set; } = null;
         public List<GetCommentByPostDto> Replies { get; set; } = new();
+       
 
     }
 }

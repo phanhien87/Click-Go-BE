@@ -43,7 +43,7 @@ namespace Click_Go.Repositories
 
         public async Task<List<Comment>> getCommentByPost(long postId)
         {
-            return await _context.Comments.Include(u => u.User).Include(u => u.Images).Where(p => p.PostId == postId).ToListAsync();
+            return await _context.Comments.Include(u => u.User).Include(r => r.Reactions).Include(u => u.Images).Where(p => p.PostId == postId).ToListAsync();
         }
 
         public Task UpdateAsync(Comment comment)

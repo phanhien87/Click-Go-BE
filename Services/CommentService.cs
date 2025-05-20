@@ -105,7 +105,8 @@ namespace Click_Go.Services
                 CreatedDate = c.CreatedDate,
                 UpdateDate = c.UpdatedDate,
                 ImagesUrl = c.Images.Select(c => c.ImagePath).ToList(),
-                Replies = await BuildCommentTree(allComments, c.Id)
+                IsLike = c.Reactions.SingleOrDefault(r =>r.CommentId == c.Id )?.IsLike,
+                Replies = await BuildCommentTree(allComments, c.Id),
             }));
 
             return commentDtos.ToList();

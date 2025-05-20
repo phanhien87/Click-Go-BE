@@ -190,5 +190,46 @@ namespace Click_Go.Services
             };
         }
 
+
+        public async Task<IEnumerable<PostReadDto>> SearchByAddressAsync(string addressQuery)
+        {
+            if (string.IsNullOrWhiteSpace(addressQuery))
+            {
+                return Enumerable.Empty<PostReadDto>();
+            }
+
+            var posts = await _postRepository.SearchByAddressAsync(addressQuery);
+
+            return posts.Select(p => new PostReadDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Title = p.Title,
+                Logo_Image = p.Logo_Image,
+                Background = p.Background,
+                SDT = p.SDT,
+                Address = p.Address,
+                Description = p.Description,
+                CreatedDate = p.CreatedDate,
+                UpdatedDate = p.UpdatedDate,
+                Category = p.Category != null ? new CategoryDto { Id = p.Category.Id, Name = p.Category.Name } : null,
+                User = p.User != null ? new UserDto { Id = p.User.Id, UserName = p.User.UserName, FullName = p.User.FullName } : null,
+                OpeningHours = p.Opening_Hours?.Select(oh => new OpeningHourDto
+                {
+                    DayOfWeek = oh.DayOfWeek,
+                    OpenHour = oh.OpenHour ?? 0,
+                    OpenMinute = oh.OpenMinute ?? 0,
+                    CloseHour = oh.CloseHour ?? 0,
+                    CloseMinute = oh.CloseMinute ?? 0
+                }).ToList() ?? new List<OpeningHourDto>(),
+                Images = p.Images?.Select(img => new ImageDto { Id = img.Id, ImagePath = img.ImagePath }).ToList() ?? new List<ImageDto>()
+            }).ToList();
+        }
+
+        public async Task<IEnumerable<PostReadDto>> GetAllPostsAsync()
+        {
+            var posts = await _postRepository.GetAllAsync();
+            return posts.Select(p => MapPostToReadDto(p)).ToList();
+        }
     }
 } 

@@ -51,6 +51,33 @@ namespace Click_Go.Repositories
             return await _context.Categories.FindAsync(categoryId);
         }
 
-        // Implement other repository methods as needed
+        public async Task<IEnumerable<Post>> SearchByAddressAsync(string addressQuery)
+        {
+            if (string.IsNullOrWhiteSpace(addressQuery))
+            {
+                return Enumerable.Empty<Post>(); 
+            }
+
+            var lowerCaseQuery = addressQuery.ToLower().Trim(); 
+
+            return await _context.Posts
+                .Where(p => p.Address != null && p.Address.ToLower().Contains(lowerCaseQuery))
+                .Include(p => p.Category)
+                .Include(p => p.User)
+                .Include(p => p.Images)
+                .Include(p => p.Opening_Hours)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Post>> GetAllAsync()
+        {
+            return await _context.Posts
+                .Include(p => p.Category)
+                .Include(p => p.User)
+                .Include(p => p.Images)
+                .Include(p => p.Opening_Hours)
+                .OrderByDescending(p => p.CreatedDate) // Order by newest first
+                .ToListAsync();
+        }
     }
 }

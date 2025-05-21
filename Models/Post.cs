@@ -20,5 +20,6 @@
         public ICollection<Image> Images { get; set; }
         public ICollection<Comment> Comments { get; set; }
         public ICollection<Rating> Ratings { get; set; }
+        public virtual ICollection<Wishlist> WishlistedByUsers { get; set; }
     }
 }

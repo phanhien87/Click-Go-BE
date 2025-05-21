@@ -8,6 +8,6 @@ namespace Click_Go.Models
         public string? Address { get; set; }
         public Post? Post { get; set; }
 
-
+        public virtual ICollection<Wishlist> Wishlists { get; set; }       
     }
 }

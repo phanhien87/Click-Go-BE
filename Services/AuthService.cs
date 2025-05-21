@@ -36,6 +36,8 @@ namespace Click_Go.Services
 
         public async Task<string> RegisterAsync(RegisterDto model)
         {
+            var existedEmail = await _userManager.FindByEmailAsync(model.Email);
+            if (existedEmail != null) return "Existed Email!";
             var user = new ApplicationUser { UserName = model.Email.Split('@')[0], Email = model.Email, FullName = model.FullName };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)

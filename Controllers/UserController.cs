@@ -44,5 +44,33 @@ namespace Click_Go.Controllers
             return Ok(user);
         }
 
+
+        [HttpPost("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult LockUnlock(string id)
+        {
+            var objFromDb = _context.Users.Find(id);
+            if (objFromDb == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy người dùng" });
+            }
+
+            if (objFromDb.LockoutEnd != null && objFromDb.LockoutEnd > DateTime.Now)
+            {
+                // Unlock  
+                objFromDb.LockoutEnd = DateTime.Now;
+            }
+            else
+            {
+                // Lock
+                objFromDb.LockoutEnd = DateTime.Now.AddYears(1000);
+            }
+
+            _context.Users.Update(objFromDb);
+            _context.SaveChanges();
+
+            return Ok(new{ success = true, message = "Thao tác thành công", lockoutEnd = objFromDb.LockoutEnd });
+        }
     }
 }

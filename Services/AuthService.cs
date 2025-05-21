@@ -1,4 +1,5 @@
 ﻿using Click_Go.DTOs;
+using Click_Go.Enum;
 using Click_Go.Models;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -39,7 +40,11 @@ namespace Click_Go.Services
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, "CUSTOMER");
+                if(model.Role != Application_Role.CUSTOMER)
+                {
+                    await _userManager.AddToRoleAsync(user, model.Role.ToString());
+                } else 
+                    await _userManager.AddToRoleAsync(user, "CUSTOMER");
                 return "Success";
             }
 

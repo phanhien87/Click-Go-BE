@@ -22,6 +22,10 @@ namespace Click_Go.DTOs
         public List<ImageDto> Images { get; set; }
         // Add other collections like Comments, Ratings if needed in the future
 
+        // New fields for detailed post information
+        public int TotalComments { get; set; }
+        public double AverageStars { get; set; }
+
         public PostReadDto()
         {
             OpeningHours = new List<OpeningHourDto>();

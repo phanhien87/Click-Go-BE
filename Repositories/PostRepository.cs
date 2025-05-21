@@ -74,9 +74,9 @@ namespace Click_Go.Repositories
             return await _context.Posts
                 .Include(p => p.Category)
                 .Include(p => p.User)
-                .Include(p => p.Images)
                 .Include(p => p.Opening_Hours)
-                .OrderByDescending(p => p.CreatedDate) // Order by newest first
+                .Include(p => p.Images)
+                .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
         }
     }

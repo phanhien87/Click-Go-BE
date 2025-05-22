@@ -88,6 +88,35 @@ namespace Click_Go.Controllers
             return Ok(postReadDtos);
         }
 
+        [HttpGet("search/address")]
+        [AllowAnonymous] // Hoặc [Authorize] tùy theo yêu cầu của bạn
+        [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)] // Nếu query không hợp lệ
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SearchPostsByAddress([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return BadRequest(new ProblemDetails { Title = "Bad Request", Detail = "Search query cannot be empty." });
+            }
+
+            _logger.LogInformation("Attempting to search posts with address query: {Query}", query);
+            
+            var result = await _postService.SearchByAddressAsync(query);
+            return Ok(result);
+        }
+
+        [HttpGet("GetAllPosts")]
+        [AllowAnonymous] // Allow public access to view all posts
+        [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllPosts()
+        {
+            _logger.LogInformation("Retrieving all posts");
+            var posts = await _postService.GetAllPostsAsync();
+            return Ok(posts);
+        }
+
         // --- Helper Method for Mapping --- 
         private PostReadDto MapPostToReadDto(Post post)
         {

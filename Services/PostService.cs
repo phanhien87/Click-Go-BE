@@ -128,8 +128,8 @@ namespace Click_Go.Services
         {
             if (overallCriteria == null) return 0;
             var scores = new List<double> { overallCriteria.Quality, overallCriteria.Location, overallCriteria.Space, overallCriteria.Service, overallCriteria.Price };
-            var validScores = scores.Where(s => s > 0).ToList(); // Consider only scores > 0 if that's the logic
-            return validScores.Any() ? validScores.Average() : 0;
+           // var validScores = scores.Where(s => s > 0).ToList(); // Consider only scores > 0 if that's the logic
+            return scores.Any() ? scores.Average() : 0;
         }
 
         public async Task<GetPostDto> GetPostByIdAsync(long id)

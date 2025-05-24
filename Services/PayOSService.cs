@@ -77,9 +77,11 @@ public class PayOSService
                 }
 
                 order.Status = Click_Go.Enum.OrderStatus.Paid;
-                order.PaidAt = DateTime.UtcNow;
-                order.PaymentDate = DateTime.UtcNow;
+                order.transactionDateTime = request.data.transactionDateTime;
                 order.TransactionId = request.data.reference;
+                order.counterAccountBankName = request.data.counterAccountBankName;
+                order.counterAccountNumber = request.data.counterAccountNumber;
+                order.counterAccountName = request.data.counterAccountName;
 
                 if (order.Package == null)
                 {
@@ -106,11 +108,9 @@ public class PayOSService
         }
         catch (Exception ex)
         {
-            // Log lỗi ra console, file hoặc hệ thống log
             Console.WriteLine($"[ConfirmPayment Error] {ex.Message}");
-            // Hoặc logger.LogError(ex, "Lỗi khi xác nhận thanh toán");
-
-            
+            throw new AppException("ConfirmPayment Error");
+           
         }
 
         return false;

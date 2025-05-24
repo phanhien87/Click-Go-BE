@@ -45,7 +45,7 @@ namespace Click_Go.Controllers
         }
 
 
-        [HttpPost("{id}")]
+        [HttpPost("Lock-Unlock/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult LockUnlock(string id)

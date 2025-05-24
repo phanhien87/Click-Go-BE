@@ -128,8 +128,8 @@ namespace Click_Go.Services
         {
             if (overallCriteria == null) return 0;
             var scores = new List<double> { overallCriteria.Quality, overallCriteria.Location, overallCriteria.Space, overallCriteria.Service, overallCriteria.Price };
-            var validScores = scores.Where(s => s > 0).ToList(); // Consider only scores > 0 if that's the logic
-            return validScores.Any() ? validScores.Average() : 0;
+           // var validScores = scores.Where(s => s > 0).ToList(); // Consider only scores > 0 if that's the logic
+            return scores.Any() ? scores.Average() : 0;
         }
 
         public async Task<GetPostDto> GetPostByIdAsync(long id)
@@ -156,7 +156,8 @@ namespace Click_Go.Services
             };
         }
 
-        public async Task<IEnumerable<Post>> GetPostsByUserIdAsync(string userId)
+
+        public async Task<IEnumerable<GetPostDto>> GetPostsByUserIdAsync(string userId)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -164,7 +165,30 @@ namespace Click_Go.Services
             }
 
             var posts = await _postRepository.GetByUserIdAsync(userId);
-            return posts;
+            if (posts == null || !posts.Any())
+            {
+                return Enumerable.Empty<GetPostDto>();
+            }
+
+            var resultList = new List<GetPostDto>();
+            foreach (var post in posts)
+            {
+                var comments = await _commentService.GetCommentsByPostAsync(post.Id);
+                var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
+
+                int totalComments = comments?.Count() ?? 0;
+                double averageStars = CalculateAverageStars(overallRating);
+
+                var postReadDto = MapPostToReadDto(post, totalComments, averageStars);
+
+                resultList.Add(new GetPostDto
+                {
+                    Post = postReadDto,
+                    Comment = comments?.ToList() ?? new List<GetCommentByPostDto>(),
+                    Rating = overallRating
+                });
+            }
+            return resultList;
         }
 
         private PostReadDto MapPostToReadDto(Post post, int totalComments, double averageStars)
@@ -253,4 +277,4 @@ namespace Click_Go.Services
             return postReadDtos;
         }
     }
-} 
+}

@@ -68,7 +68,7 @@ namespace Click_Go.Controllers
         }
 
         [HttpGet("MyPosts")] // Get current user's posts
-        [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<GetPostDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -81,11 +81,10 @@ namespace Click_Go.Controllers
                 return Unauthorized(new ProblemDetails { Title = "Unauthorized", Detail = "User ID not found in token." });
             }
 
-            var posts = await _postService.GetPostsByUserIdAsync(userId);
-            var postReadDtos = posts.Select(post => MapPostToReadDto(post)).ToList();
+            var postsWithDetails = await _postService.GetPostsByUserIdAsync(userId);
 
-            _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postReadDtos.Count, userId);
-            return Ok(postReadDtos);
+            _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postsWithDetails.Count(), userId);
+            return Ok(postsWithDetails);
         }
 
         [HttpGet("search/address")]

@@ -8,8 +8,10 @@ namespace Click_Go.DTOs
         public string Name { get; set; }
         public string Title { get; set; }
         public string SDT { get; set; }
+        public string? Street { get; set; }
         public string? District { get; set; }
         public string? Ward { get; set; }
+        
         public string? City { get; set; }
         public string Description { get; set; }
         public long CategoryId { get; set; }

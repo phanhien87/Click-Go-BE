@@ -69,6 +69,10 @@ namespace Click_Go.Services
 
             // Combine address components
             var addressParts = new List<string?>();
+            if (!string.IsNullOrWhiteSpace(postDto.Street))
+            {
+                addressParts.Add(postDto.Street.Trim());
+            }
             if (!string.IsNullOrWhiteSpace(postDto.District))
             {
                 addressParts.Add(postDto.District.Trim());
@@ -268,7 +272,6 @@ namespace Click_Go.Services
                  string.IsNullOrWhiteSpace(searchDto.Ward) && 
                  string.IsNullOrWhiteSpace(searchDto.City)))
             {
-                throw new AppException("No result");
                 return Enumerable.Empty<PostReadDto>();
             }
 

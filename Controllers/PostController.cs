@@ -113,6 +113,10 @@ namespace Click_Go.Controllers
             _logger.LogInformation("Attempting to search posts with criteria: {SearchCriteria}", searchDto);
             
             var result = await _postService.SearchPostsAsync(searchDto); // Changed method call
+            if (result == null || !result.Any())
+            {
+                return NotFound(new ProblemDetails { Title = "Not Found", Detail = "No posts matched your search criteria." });
+            }
             return Ok(result);
         }
 

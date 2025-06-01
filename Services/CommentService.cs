@@ -81,18 +81,23 @@ namespace Click_Go.Services
 
         }
 
-        public async Task<List<GetCommentByPostDto>> GetCommentsByPostAsync(long postId)
+        public async Task<List<GetCommentByPostDto>> GetCommentsByPostAsync(long postId, string? currentUserId = null)
         {
             var allComments = await _commentRepo.getCommentByPost(postId);
-           return await BuildCommentTree(allComments).ConfigureAwait(false);
+            return await BuildCommentTree(allComments, null, currentUserId).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Comment>> GetCommentsByPostIdAsync(long postId)
+        public async Task<IEnumerable<Comment>> GetCommentsByPostIdAsync(long postId, string? currentUserId = null)
         {
             return await _commentRepo.GetByPostIdAsync(postId);
         }
 
-        private async Task<List<GetCommentByPostDto>> BuildCommentTree(List<Comment> allComments, long? parentId = null)
+        public async Task<IEnumerable<Comment>> GetCommentsByPostIdAsync(long postId)
+        {
+            return await _commentRepo.GetByPostIdAsync(postId); 
+        }
+
+        private async Task<List<GetCommentByPostDto>> BuildCommentTree(List<Comment> allComments, long? parentId = null, string? currentUserId = null)
         {
             var comments = allComments.Where(c => c.ParentId == parentId)
                                .OrderBy(c => c.CreatedDate);
@@ -101,12 +106,14 @@ namespace Click_Go.Services
             {
                 CommentId = c.Id,
                 Content = c.Content,
-                UserName = c.User.UserName,
+                UserName = c.User?.UserName ?? "",
                 CreatedDate = c.CreatedDate,
                 UpdateDate = c.UpdatedDate,
-                ImagesUrl = c.Images.Select(c => c.ImagePath).ToList(),
-                IsLike = c.Reactions.SingleOrDefault(r =>r.CommentId == c.Id )?.IsLike,
-                Replies = await BuildCommentTree(allComments, c.Id),
+                ImagesUrl = c.Images?.Select(img => img.ImagePath).ToList() ?? new List<string>(),
+                IsLike = currentUserId == null ? null : c.Reactions?.FirstOrDefault(r => r.UserId == currentUserId)?.IsLike,
+                LikeCount = c.Reactions?.Count(r => r.IsLike == true) ?? 0,
+                UnlikeCount = c.Reactions?.Count(r => r.IsLike == false) ?? 0,
+                Replies = await BuildCommentTree(allComments, c.Id, currentUserId),
             }));
 
             return commentDtos.ToList();

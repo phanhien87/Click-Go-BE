@@ -59,10 +59,12 @@ namespace Click_Go.Controllers
             await _reactService.ReactComment(reactDto, userId);
             return Ok(new { message = "react submitted successfully!" });
         }
+
         [HttpGet("allcomments")]
         public async Task<IActionResult> GetAllCommnets([FromQuery] long postId)
         {
-            var allComments = await _commentService.GetCommentsByPostAsync(postId);
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var allComments = await _commentService.GetCommentsByPostAsync(postId, userId);
             return Ok(allComments);
         }
     }

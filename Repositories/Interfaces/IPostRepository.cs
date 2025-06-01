@@ -11,7 +11,8 @@ namespace Click_Go.Repositories.Interfaces
         Task<Post> GetByIdAsync(long id);
         Task<IEnumerable<Post>> GetByUserIdAsync(string userId);
         Task<Category> GetCategoryByIdAsync(long categoryId);
-        Task<IEnumerable<Post>> SearchByAddressAsync(string addressQuery);
+        Task<IEnumerable<Post>> SearchPostsAsync(PostSearchDto searchDto);
         Task<IEnumerable<Post>> GetAllAsync();
+        Task<UserPackage> GetUserPackageByUserIdAsync(string userId);
     }
 }

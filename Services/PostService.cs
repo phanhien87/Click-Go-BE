@@ -39,6 +39,17 @@ namespace Click_Go.Services
 
         public async Task<Post> CreatePostAsync(PostCreateDto postDto, string userId)
         {
+            var userPackage = await _postRepository.GetUserPackageByUserIdAsync(userId);
+            if (userPackage == null)
+            {
+                throw new AppException("User does not have an active package. Please subscribe to a package to post.");
+            }
+
+            if (userPackage.ExpireDate < DateTime.UtcNow)
+            {
+                throw new AppException("Your package has expired. Please renew your subscription to post.");
+            }
+
             var existingPosts = await _postRepository.GetByUserIdAsync(userId);
             if (existingPosts.Any())
             {
@@ -56,12 +67,32 @@ namespace Click_Go.Services
                 throw new NotFoundException("Invalid Category ID.");
             }
 
+            // Combine address components
+            var addressParts = new List<string?>();
+            if (!string.IsNullOrWhiteSpace(postDto.Street))
+            {
+                addressParts.Add(postDto.Street.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.District))
+            {
+                addressParts.Add(postDto.District.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.Ward))
+            {
+                addressParts.Add(postDto.Ward.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.City))
+            {
+                addressParts.Add(postDto.City.Trim());
+            }
+            var combinedAddress = string.Join(", ", addressParts.Where(s => !string.IsNullOrEmpty(s)));
+
             var post = new Post
             {
                 Name = postDto.Name,
                 Title = postDto.Title,
                 SDT = postDto.SDT,
-                Address = postDto.Address,
+                Address = combinedAddress,
                 Description = postDto.Description,
                 CategoryId = postDto.CategoryId,
                 UserId = userId,
@@ -233,15 +264,18 @@ namespace Click_Go.Services
                 AverageStars = averageStars
             };
         }
-
-        public async Task<IEnumerable<PostReadDto>> SearchByAddressAsync(string addressQuery)
+        public async Task<IEnumerable<PostReadDto>> SearchPostsAsync(PostSearchDto searchDto)
         {
-            if (string.IsNullOrWhiteSpace(addressQuery))
+            if (searchDto == null || 
+                (string.IsNullOrWhiteSpace(searchDto.PostName) && 
+                 string.IsNullOrWhiteSpace(searchDto.District) && 
+                 string.IsNullOrWhiteSpace(searchDto.Ward) && 
+                 string.IsNullOrWhiteSpace(searchDto.City)))
             {
                 return Enumerable.Empty<PostReadDto>();
             }
 
-            var posts = await _postRepository.SearchByAddressAsync(addressQuery);
+            var posts = await _postRepository.SearchPostsAsync(searchDto);
 
             var postReadDtos = new List<PostReadDto>();
             foreach (var post in posts)

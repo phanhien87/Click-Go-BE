@@ -51,17 +51,37 @@ namespace Click_Go.Repositories
             return await _context.Categories.FindAsync(categoryId);
         }
 
-        public async Task<IEnumerable<Post>> SearchByAddressAsync(string addressQuery)
+        public async Task<IEnumerable<Post>> SearchPostsAsync(PostSearchDto searchDto)
         {
-            if (string.IsNullOrWhiteSpace(addressQuery))
+            var query = _context.Posts.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchDto.PostName))
             {
-                return Enumerable.Empty<Post>(); 
+                query = query.Where(p => p.Name.ToLower().Contains(searchDto.PostName.ToLower().Trim()));
             }
 
-            var lowerCaseQuery = addressQuery.ToLower().Trim(); 
+            // Helper to process address components
+            var addressComponents = new List<string>();
+            if (!string.IsNullOrWhiteSpace(searchDto.District))
+            {
+                addressComponents.Add(searchDto.District.ToLower().Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(searchDto.Ward))
+            {
+                addressComponents.Add(searchDto.Ward.ToLower().Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(searchDto.City))
+            {
+                addressComponents.Add(searchDto.City.ToLower().Trim());
+            }
 
-            return await _context.Posts
-                .Where(p => p.Address != null && p.Address.ToLower().Contains(lowerCaseQuery))
+            if (addressComponents.Any())
+            {
+                query = query.Where(p => p.Address != null && 
+                                         addressComponents.All(comp => p.Address.ToLower().Contains(comp)));
+            }
+            
+            return await query
                 .Include(p => p.Category)
                 .Include(p => p.User)
                 .Include(p => p.Images)
@@ -78,6 +98,12 @@ namespace Click_Go.Repositories
                 .Include(p => p.Images)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
+        }
+
+        public async Task<UserPackage> GetUserPackageByUserIdAsync(string userId)
+        {
+            return await _context.UserPackages
+                                 .FirstOrDefaultAsync(up => up.UserId == userId);
         }
     }
 }

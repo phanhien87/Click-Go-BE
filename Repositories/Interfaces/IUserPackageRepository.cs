@@ -6,5 +6,8 @@ namespace Click_Go.Repositories.Interfaces
     {
         Task AddAsync(UserPackage userPackage);
         Task<List<UserPackage>> GetAllAsync();
+        Task UpdateAsync(UserPackage userPackage);
+        Task<UserPackage> CheckPackageByUserId(string userId);
+
     }
 }

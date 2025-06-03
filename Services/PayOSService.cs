@@ -30,8 +30,15 @@ public class PayOSService
         _orderRepository = orderRepository;
     }
 
-    public async Task<string> CreatePaymentLink(long packageId, string returnUrl, string cancelUrl,string userId)
+    public async Task<PaymentResult> CreatePaymentLink(long packageId, string returnUrl, string cancelUrl,string userId)
     {
+        var userpackage = await _userPackageRepository.CheckPackageByUserId(userId);
+        if (userpackage != null) return new PaymentResult
+        {
+            Success = false,
+            Message = "Bạn đang dùng 1 gói rồi !"
+        }
+        ;
         var package = await _packageRepository.GetPackageByIdAsync(packageId);
         var amountStr = package.Price.ToString();
         var amount = int.Parse(amountStr);
@@ -59,8 +66,11 @@ public class PayOSService
         CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
 
 
-        return createPayment.checkoutUrl;
-       
+        return new PaymentResult
+        {
+            Success = true,
+            CheckoutUrl = createPayment.checkoutUrl,
+        };
     }
 
 

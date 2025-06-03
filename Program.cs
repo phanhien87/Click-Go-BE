@@ -95,6 +95,11 @@ namespace Click_Go
             {
                 options.AppId = builder.Configuration["Facebook:AppId"];
                 options.AppSecret = builder.Configuration["Facebook:AppSecret"];
+            }).AddGoogle(options =>
+            {
+                options.ClientId = "826336473893-hivarf6lubp1g3qn4ccvlgoskp3v7qta.apps.googleusercontent.com";
+                options.ClientSecret = "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";
+                options.CallbackPath = "/signin-google";
             });
              
             builder.Services.AddCors(options =>

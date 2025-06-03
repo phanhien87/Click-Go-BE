@@ -73,13 +73,13 @@ namespace Click_Go.Services
             {
                 addressParts.Add(postDto.Street.Trim());
             }
-            if (!string.IsNullOrWhiteSpace(postDto.District))
-            {
-                addressParts.Add(postDto.District.Trim());
-            }
             if (!string.IsNullOrWhiteSpace(postDto.Ward))
             {
                 addressParts.Add(postDto.Ward.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.District))
+            {
+                addressParts.Add(postDto.District.Trim());
             }
             if (!string.IsNullOrWhiteSpace(postDto.City))
             {

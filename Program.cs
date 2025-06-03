@@ -135,7 +135,7 @@ namespace Click_Go
             }
 
             app.UseMiddleware<ExceptionMiddleware>();
-
+            app.UseMiddleware<UserPackageValidationMiddleware>();
 
             app.UseCors("AllowReactApp");
 

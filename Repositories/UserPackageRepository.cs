@@ -22,9 +22,26 @@ namespace Click_Go.Repositories
             
         }
 
+        public async Task<UserPackage> CheckPackageByUserId(string userId)
+        {
+               return await _context.UserPackages.Where(up => up.Status == 1).FirstOrDefaultAsync(up => up.UserId == userId);    
+        }
+
         public async Task<List<UserPackage>> GetAllAsync()
         {
             return await _context.UserPackages.ToListAsync();
+        }
+
+        public async Task UpdateAsync(UserPackage userPackage)
+        {
+            if (userPackage == null) return;
+            if (_context.Entry(userPackage).State == EntityState.Detached)
+            {
+                _context.UserPackages.Attach(userPackage);
+                _context.Entry(userPackage).State = EntityState.Modified;
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

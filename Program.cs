@@ -12,6 +12,9 @@ using Click_Go.Helper;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Repositories;
 using Click_Go.Middleware;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
+
 
 namespace Click_Go
 {
@@ -147,7 +150,14 @@ namespace Click_Go
             
             app.UseAuthorization();
 
-           
+            // Cho phép truy cập thư mục UploadedFiles như một static folder
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(builder.Environment.ContentRootPath, "UploadedFiles")),
+                RequestPath = "/UploadedFiles"
+            });
+
 
             app.MapControllers();
 

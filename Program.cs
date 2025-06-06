@@ -59,6 +59,9 @@ namespace Click_Go
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
             builder.Services.AddScoped<PayOSService>();
 
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+            builder.Services.AddTransient<IEmailService, MailKitEmailService>();
+
 
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();

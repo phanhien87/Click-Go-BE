@@ -45,7 +45,9 @@ namespace Click_Go
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
             builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
-
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPostService, PostService>();
@@ -54,7 +56,9 @@ namespace Click_Go
             builder.Services.AddScoped<ICommentService, CommentService>();
             builder.Services.AddScoped<IReactService, ReactService>();
             builder.Services.AddScoped<IPackageService, PackageService>();
-            builder.Services.AddScoped<IWishlistService, WishlistService>();
+            builder.Services.AddScoped<IWishlistService, WishlistService>(); 
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
             builder.Services.AddScoped<PayOSService>();

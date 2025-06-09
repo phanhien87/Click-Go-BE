@@ -1,4 +1,5 @@
-﻿using Click_Go.Models;
+﻿using Click_Go.DTOs;
+using Click_Go.Models;
 
 namespace Click_Go.Repositories.Interfaces
 {
@@ -8,6 +9,7 @@ namespace Click_Go.Repositories.Interfaces
         Task DeleteAsync(Order order);
         Task<Order> GetByCodeAsync(long code);
         Task UpdateAsync(Order order);
+        Task<List<OrderCodeDto>> GetOrdersAsync();
         Task<Order> GetOrderListByUserIdAndPackageId(string id, long packageId);
     }
 }

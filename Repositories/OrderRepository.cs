@@ -1,4 +1,5 @@
 ﻿using Click_Go.Data;
+using Click_Go.DTOs;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,25 @@ namespace Click_Go.Repositories
                                         .Where(o => o.UserId == userId && o.PackageId == packageId)
                                         .OrderByDescending(o => o.CreatedDate) 
                                         .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<OrderCodeDto>> GetOrdersAsync()
+        {
+            var orders = await _context.Orders.Include(p => p.Package).ToListAsync();
+            return orders.Select(order => new OrderCodeDto
+            {
+                OrderCode = order.OrderCode,
+                PackageId = order.Package.Id,
+                transactionDateTime = order.transactionDateTime,
+                counterAccountBankName = order.counterAccountBankName,
+                counterAccountName = order.counterAccountName,
+                counterAccountNumber = order.counterAccountNumber,
+                Amount = order.Amount,
+                Status = order.Status,
+                UserId = order.UserId,
+                TransactionId = order.TransactionId,
+                Package = order.Package,
+            }).ToList();
         }
 
         public async Task UpdateAsync(Order order)

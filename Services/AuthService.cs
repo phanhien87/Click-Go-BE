@@ -26,7 +26,11 @@ namespace Click_Go.Services
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
                 throw new UnauthorizedAccessException("Sai tên đăng nhập.");
-
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
+            {
+                throw new UnauthorizedAccessException("Tài khoản bị khóa!");
+            }
+           
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!passwordValid)
                 throw new UnauthorizedAccessException("Sai mật khẩu.");

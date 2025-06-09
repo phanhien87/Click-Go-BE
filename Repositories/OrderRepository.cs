@@ -30,6 +30,14 @@ namespace Click_Go.Repositories
             return await _context.Orders.Include(p => p.Package).FirstOrDefaultAsync(o => o.OrderCode == code.ToString());
         }
 
+        public async Task<Order> GetOrderListByUserIdAndPackageId(string userId, long packageId)
+        {
+            return await _context.Orders
+                                        .Where(o => o.UserId == userId && o.PackageId == packageId)
+                                        .OrderByDescending(o => o.CreatedDate) 
+                                        .FirstOrDefaultAsync();
+        }
+
         public async Task UpdateAsync(Order order)
         {
              _context.Orders.Update(order);

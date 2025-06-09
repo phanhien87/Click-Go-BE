@@ -39,6 +39,17 @@ namespace Click_Go.Services
 
         public async Task<Post> CreatePostAsync(PostCreateDto postDto, string userId)
         {
+            var userPackage = await _postRepository.GetUserPackageByUserIdAsync(userId);
+            if (userPackage == null)
+            {
+                throw new AppException("User does not have an active package. Please subscribe to a package to post.");
+            }
+
+            if (userPackage.ExpireDate < DateTime.UtcNow)
+            {
+                throw new AppException("Your package has expired. Please renew your subscription to post.");
+            }
+
             var existingPosts = await _postRepository.GetByUserIdAsync(userId);
             if (existingPosts.Any())
             {
@@ -56,12 +67,32 @@ namespace Click_Go.Services
                 throw new NotFoundException("Invalid Category ID.");
             }
 
+            // Combine address components
+            var addressParts = new List<string?>();
+            if (!string.IsNullOrWhiteSpace(postDto.Street))
+            {
+                addressParts.Add(postDto.Street.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.Ward))
+            {
+                addressParts.Add(postDto.Ward.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.District))
+            {
+                addressParts.Add(postDto.District.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.City))
+            {
+                addressParts.Add(postDto.City.Trim());
+            }
+            var combinedAddress = string.Join(", ", addressParts.Where(s => !string.IsNullOrEmpty(s)));
+
             var post = new Post
             {
                 Name = postDto.Name,
                 Title = postDto.Title,
                 SDT = postDto.SDT,
-                Address = postDto.Address,
+                Address = combinedAddress,
                 Description = postDto.Description,
                 CategoryId = postDto.CategoryId,
                 UserId = userId,
@@ -124,6 +155,14 @@ namespace Click_Go.Services
             return await _postRepository.CreateAsync(post);
         }
 
+        private double CalculateAverageStars(OverallCriteriaDto overallCriteria)
+        {
+            if (overallCriteria == null) return 0;
+            var scores = new List<double> { overallCriteria.Quality, overallCriteria.Location, overallCriteria.Space, overallCriteria.Service, overallCriteria.Price };
+           // var validScores = scores.Where(s => s > 0).ToList(); // Consider only scores > 0 if that's the logic
+            return scores.Any() ? scores.Average() : 0;
+        }
+
         public async Task<GetPostDto> GetPostByIdAsync(long id)
         {
             var post = await _postRepository.GetByIdAsync(id);
@@ -131,13 +170,25 @@ namespace Click_Go.Services
             {
                 throw new NotFoundException($"Post with ID {id} not found.");
             }
-            var postReadDto = MapPostToReadDto(post);
-            var comment = await _commentService.GetCommentsByPostAsync(id);
+
+            var comments = await _commentService.GetCommentsByPostAsync(id);
             var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(id);
-            return new GetPostDto { Comment = comment, Post = postReadDto, Rating = overallRating};
+            
+            int totalComments = comments?.Count() ?? 0;
+            double averageStars = CalculateAverageStars(overallRating);
+
+            var postReadDto = MapPostToReadDto(post, totalComments, averageStars);
+            
+            return new GetPostDto 
+            { 
+                Post = postReadDto, 
+                Comment = comments?.ToList() ?? new List<GetCommentByPostDto>(), 
+                Rating = overallRating 
+            };
         }
 
-        public async Task<IEnumerable<Post>> GetPostsByUserIdAsync(string userId)
+
+        public async Task<IEnumerable<GetPostDto>> GetPostsByUserIdAsync(string userId)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -145,12 +196,34 @@ namespace Click_Go.Services
             }
 
             var posts = await _postRepository.GetByUserIdAsync(userId);
-            return posts;
+            if (posts == null || !posts.Any())
+            {
+                return Enumerable.Empty<GetPostDto>();
+            }
+
+            var resultList = new List<GetPostDto>();
+            foreach (var post in posts)
+            {
+                var comments = await _commentService.GetCommentsByPostAsync(post.Id);
+                var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
+
+                int totalComments = comments?.Count() ?? 0;
+                double averageStars = CalculateAverageStars(overallRating);
+
+                var postReadDto = MapPostToReadDto(post, totalComments, averageStars);
+
+                resultList.Add(new GetPostDto
+                {
+                    Post = postReadDto,
+                    Comment = comments?.ToList() ?? new List<GetCommentByPostDto>(),
+                    Rating = overallRating
+                });
+            }
+            return resultList;
         }
 
-        private PostReadDto MapPostToReadDto(Post post)
+        private PostReadDto MapPostToReadDto(Post post, int totalComments, double averageStars)
         {
-            // Handle potential null navigation properties
             return new PostReadDto
             {
                 Id = post.Id,
@@ -177,7 +250,7 @@ namespace Click_Go.Services
                 OpeningHours = post.Opening_Hours?.Select(oh => new OpeningHourDto
                 {
                     DayOfWeek = oh.DayOfWeek,
-                    OpenHour = oh.OpenHour ?? 0, // Provide default if nullable
+                    OpenHour = oh.OpenHour ?? 0,
                     OpenMinute = oh.OpenMinute ?? 0,
                     CloseHour = oh.CloseHour ?? 0,
                     CloseMinute = oh.CloseMinute ?? 0
@@ -186,9 +259,69 @@ namespace Click_Go.Services
                 {
                     Id = img.Id,
                     ImagePath = img.ImagePath
-                }).ToList() ?? new List<ImageDto>()
+                }).ToList() ?? new List<ImageDto>(),
+                TotalComments = totalComments,
+                AverageStars = averageStars
             };
         }
+        public async Task<IEnumerable<PostReadDto>> SearchPostsAsync(PostSearchDto searchDto)
+        {
+            if (searchDto == null || 
+                (string.IsNullOrWhiteSpace(searchDto.PostName) && 
+                 string.IsNullOrWhiteSpace(searchDto.District) && 
+                 string.IsNullOrWhiteSpace(searchDto.Ward) && 
+                 string.IsNullOrWhiteSpace(searchDto.City)))
+            {
+                return Enumerable.Empty<PostReadDto>();
+            }
 
+            var posts = await _postRepository.SearchPostsAsync(searchDto);
+
+            var postReadDtos = new List<PostReadDto>();
+            foreach (var post in posts)
+            {
+                var comments = await _commentService.GetCommentsByPostAsync(post.Id);
+                var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
+                int totalComments = comments?.Count() ?? 0;
+                double averageStars = CalculateAverageStars(overallRating);
+                postReadDtos.Add(MapPostToReadDto(post, totalComments, averageStars));
+            }
+            return postReadDtos;
+        }
+
+        public async Task<IEnumerable<PostReadDto>> GetAllPostsAsync()
+        {
+            var posts = await _postRepository.GetAllAsync();
+            if (posts == null || !posts.Any())
+            {
+                return Enumerable.Empty<PostReadDto>();
+            }
+
+            var postReadDtos = new List<PostReadDto>();
+            foreach (var post in posts)
+            {
+                var comments = await _commentService.GetCommentsByPostAsync(post.Id);
+                var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
+                
+                int totalComments = comments?.Count() ?? 0;
+                double averageStars = CalculateAverageStars(overallRating);
+
+                postReadDtos.Add(MapPostToReadDto(post, totalComments, averageStars));
+            }
+            return postReadDtos;
+        }
+
+        public async Task UpdatePostAsync(string userId)
+        {
+            var postsList = await _postRepository.GetByUserIdAsync(userId);
+            if (postsList != null)
+            {
+                foreach (var post in postsList)
+                {
+                    post.Status = 0;
+                }
+                await _postRepository.UpdatePostAsync(postsList.ToList());
+            }
+        }
     }
-} 
+}

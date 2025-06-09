@@ -1,14 +1,15 @@
-﻿using Azure.Core;
+﻿using System.Security.Claims;
+using Azure.Core;
 using Click_Go.DTOs;
 using Click_Go.Helper;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
+using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Net.payOS;
 using Net.payOS.Types;
-using System.Security.Claims;
 
 
 public class PayOSService
@@ -18,9 +19,10 @@ public class PayOSService
     private readonly IUserPackageRepository _userPackageRepository;
     private readonly IOrderRepository _orderRepository;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IEmailService _emailService;
     public PayOSService(IOptions<PayOSOptions> options, IHttpContextAccessor httpContextAccessor,
         UserManager<ApplicationUser> userManager, IUserPackageRepository userPackageRepository,
-        IPackageRepository packageRepository, IOrderRepository orderRepository)
+        IPackageRepository packageRepository, IOrderRepository orderRepository, IEmailService emailService)
     {
         var opts = options.Value;
         _payOS = new PayOS(opts.ClientId, opts.ApiKey, opts.ChecksumKey);
@@ -28,43 +30,65 @@ public class PayOSService
         _userPackageRepository = userPackageRepository; 
         _userManager = userManager;
         _orderRepository = orderRepository;
+        _emailService = emailService;
     }
 
-    public async Task<string> CreatePaymentLink(long packageId, string returnUrl, string cancelUrl,string userId)
+    public async Task<PaymentResult> CreatePaymentLink(long packageId, string returnUrl, string cancelUrl,string userId)
     {
+        var userpackage = await _userPackageRepository.CheckPackageByUserId(userId);
+        if (userpackage != null) return new PaymentResult
+        {
+            Success = false,
+            Message = "Bạn đang dùng 1 gói rồi !"
+        }
+        ;
+        //bổ sung hàm để kt order nào chưa thanh toán
+        PaymentData paymentData;
+
         var package = await _packageRepository.GetPackageByIdAsync(packageId);
         var amountStr = package.Price.ToString();
         var amount = int.Parse(amountStr);
+        //var existedOrder = await _orderRepository.GetOrderListByUserIdAndPackageId(userId, packageId);
+        //if(existedOrder != null && existedOrder.Status == 0)
+        //{
+        //    long orderCode = long.Parse(existedOrder.OrderCode);
+        //    paymentData = new PaymentData(orderCode, amount, package.Name, null
+        //     , cancelUrl, returnUrl);
+        //}
+        //else
+        //{
+            var orderCode = await GenerateUniqueOrderCodeAsync();
+            var order = new Order
+            {
+                OrderCode = orderCode.ToString(),
+                UserId = userId,
+                PackageId = packageId,
+                Amount = amount,
+                Status = Click_Go.Enum.OrderStatus.Pending,
+                CreatedDate = DateTime.UtcNow,
+                CreatedUser = Guid.Parse(userId),
+            };
 
+            await _orderRepository.AddAsync(order);
+            paymentData = new PaymentData(orderCode, amount, package.Name, null
+             , cancelUrl, returnUrl);
+       // }
+       
 
-        var orderCode = await GenerateUniqueOrderCodeAsync();
-
-
-        var order = new Order
-        {
-            OrderCode = orderCode.ToString(),
-            UserId = userId,
-            PackageId = packageId,
-            Amount = amount,
-            Status = Click_Go.Enum.OrderStatus.Pending,
-            CreatedDate = DateTime.UtcNow,
-            CreatedUser = Guid.Parse(userId),
-        };
-        
-        await _orderRepository.AddAsync(order);
-
-        PaymentData paymentData = new PaymentData(orderCode, amount, package.Name, null
-              , cancelUrl, returnUrl);
+       
 
         CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
 
 
-        return createPayment.checkoutUrl;
-       
+        return new PaymentResult
+        {
+            Success = true,
+            CheckoutUrl = createPayment.checkoutUrl,
+        };
     }
 
 
-    public async Task<bool> ConfirmPayment(WebhookType request, string userId)
+    public async Task<bool> ConfirmPayment(WebhookType request)
     {
         try
         {
@@ -77,9 +101,11 @@ public class PayOSService
                 }
 
                 order.Status = Click_Go.Enum.OrderStatus.Paid;
-                order.PaidAt = DateTime.UtcNow;
-                order.PaymentDate = DateTime.UtcNow;
+                order.transactionDateTime = request.data.transactionDateTime;
                 order.TransactionId = request.data.reference;
+                order.counterAccountBankName = request.data.counterAccountBankName;
+                order.counterAccountNumber = request.data.counterAccountNumber;
+                order.counterAccountName = request.data.counterAccountName;
 
                 if (order.Package == null)
                 {
@@ -100,17 +126,29 @@ public class PayOSService
                 };
 
                 await _userPackageRepository.AddAsync(userpackage);
+                // Gửi email cho người dùng
+                var user = await _userManager.FindByIdAsync(order.UserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    string subject = "Xác nhận thanh toán thành công";
+                    string body = $@"
+                    <p>Xin chào {user.FullName},</p>
+                    <p>Chúng tôi đã nhận được thanh toán của bạn cho gói <strong>{order.Package.Name}</strong>.</p>
+                    <p>Giao dịch của bạn đã được xác nhận vào lúc {order.transactionDateTime:dd/MM/yyyy HH:mm}.</p>
+                    <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
+                    <p>Trân trọng,<br/>Đội ngũ hỗ trợ - 0963009178</p>";
+
+                    await _emailService.SendEmailAsync(user.Email, subject, body);
+                }
 
                 return true;
             }
         }
         catch (Exception ex)
         {
-            // Log lỗi ra console, file hoặc hệ thống log
             Console.WriteLine($"[ConfirmPayment Error] {ex.Message}");
-            // Hoặc logger.LogError(ex, "Lỗi khi xác nhận thanh toán");
-
-            
+            throw new AppException("ConfirmPayment Error");
+           
         }
 
         return false;

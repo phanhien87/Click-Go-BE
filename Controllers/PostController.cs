@@ -63,12 +63,14 @@ namespace Click_Go.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)] 
         public async Task<IActionResult> GetPostById(long id)
         {
-            var post = await _postService.GetPostByIdAsync(id);
-            return Ok(post);
+            _logger.LogInformation("Attempting to retrieve post with ID: {PostId}", id);
+            var getPostDto = await _postService.GetPostByIdAsync(id);
+            _logger.LogInformation("Successfully retrieved post with ID: {PostId}", id);
+            return Ok(getPostDto);
         }
 
         [HttpGet("MyPosts")] // Get current user's posts
-        [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<GetPostDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -81,11 +83,52 @@ namespace Click_Go.Controllers
                 return Unauthorized(new ProblemDetails { Title = "Unauthorized", Detail = "User ID not found in token." });
             }
 
-            var posts = await _postService.GetPostsByUserIdAsync(userId);
-            var postReadDtos = posts.Select(post => MapPostToReadDto(post)).ToList();
+            var postsWithDetails = await _postService.GetPostsByUserIdAsync(userId);
 
-            _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postReadDtos.Count, userId);
-            return Ok(postReadDtos);
+            _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postsWithDetails.Count(), userId);
+            return Ok(postsWithDetails);
+        }
+
+        [HttpGet("search")] // Changed route from search/address
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SearchPosts([FromQuery] PostSearchDto searchDto) // Changed parameter
+        {
+            // Validate that at least one search parameter is provided
+            if (searchDto == null || 
+                (string.IsNullOrWhiteSpace(searchDto.PostName) && 
+                 string.IsNullOrWhiteSpace(searchDto.District) && 
+                 string.IsNullOrWhiteSpace(searchDto.Ward) && 
+                 string.IsNullOrWhiteSpace(searchDto.City)))
+            {
+                return BadRequest(new ProblemDetails 
+                { 
+                    Title = "Bad Request", 
+                    Detail = "At least one search parameter (postName, district, ward, or city) must be provided."
+                });
+            }
+
+            _logger.LogInformation("Attempting to search posts with criteria: {SearchCriteria}", searchDto);
+            
+            var result = await _postService.SearchPostsAsync(searchDto); // Changed method call
+            if (result == null || !result.Any())
+            {
+                return NotFound(new ProblemDetails { Title = "Not Found", Detail = "No posts matched your search criteria." });
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("GetAllPosts")]
+        [AllowAnonymous] // Allow public access to view all posts
+        [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllPosts()
+        {
+            _logger.LogInformation("Retrieving all posts");
+            var posts = await _postService.GetAllPostsAsync();
+            return Ok(posts);
         }
 
         // --- Helper Method for Mapping --- 

@@ -1,17 +1,20 @@
-﻿using Click_Go.Data;
+﻿using System.Text;
+using System.Text.Json.Serialization;
+using Click_Go.Data;
+using Click_Go.Helper;
+using Click_Go.Middleware;
 using Click_Go.Models;
-using Click_Go.Services.Interfaces;
+using Click_Go.Repositories;
+using Click_Go.Repositories.Interfaces;
 using Click_Go.Services;
+using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Text.Json.Serialization;
-using Click_Go.Helper;
-using Click_Go.Repositories.Interfaces;
-using Click_Go.Repositories;
-using Click_Go.Middleware;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 namespace Click_Go
 {
@@ -55,6 +58,9 @@ namespace Click_Go
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
             builder.Services.AddScoped<PayOSService>();
+
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+            builder.Services.AddTransient<IEmailService, MailKitEmailService>();
 
 
             builder.Services.AddScoped<SaveImage>();
@@ -135,9 +141,10 @@ namespace Click_Go
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            app.UseMiddleware<BanCheckMiddleware>();
             app.UseMiddleware<ExceptionMiddleware>();
-
+            app.UseMiddleware<UserPackageValidationMiddleware>();
+            
 
             app.UseCors("AllowReactApp");
 
@@ -152,7 +159,13 @@ namespace Click_Go
             
             app.UseAuthorization();
 
-           
+            // Cho phép truy cập thư mục UploadedFiles như một static folder
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(builder.Environment.ContentRootPath, "UploadedFiles")),
+                RequestPath = "/UploadedFiles"
+            });
 
             app.MapControllers();
 

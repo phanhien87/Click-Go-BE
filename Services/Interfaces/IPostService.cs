@@ -12,5 +12,7 @@ namespace Click_Go.Services.Interfaces
         Task<IEnumerable<GetPostDto>> GetPostsByUserIdAsync(string userId);
         Task<IEnumerable<PostReadDto>> SearchPostsAsync(PostSearchDto searchDto);
         Task<IEnumerable<PostReadDto>> GetAllPostsAsync();
+
+        Task UpdatePostAsync(string userId);
     }
 }

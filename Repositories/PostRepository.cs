@@ -105,5 +105,11 @@ namespace Click_Go.Repositories
             return await _context.UserPackages
                                  .FirstOrDefaultAsync(up => up.UserId == userId);
         }
+
+        public async Task UpdatePostAsync(List<Post> post)
+        {
+            _context.Posts.UpdateRange(post);
+            await _context.SaveChangesAsync();
+        }
     }
 }

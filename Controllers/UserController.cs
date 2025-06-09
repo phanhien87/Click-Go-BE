@@ -1,6 +1,9 @@
-﻿using Click_Go.Data;
+﻿using System.Security.Claims;
+using System.Threading.Tasks;
+using Click_Go.Data;
 using Click_Go.DTOs;
 using Click_Go.Models;
+using Click_Go.Services.Interfaces;
 using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -16,11 +19,12 @@ namespace Click_Go.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public UserController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly IPostService _postService;
+        public UserController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IPostService postService)
         {
             _context = context;
             _userManager = userManager;
+            _postService = postService;
         }
 
         // GET: api/User
@@ -48,7 +52,7 @@ namespace Click_Go.Controllers
         [HttpPost("Lock-Unlock/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult LockUnlock(string id)
+        public async Task<IActionResult> LockUnlock(string id)
         {
             var objFromDb = _context.Users.Find(id);
             if (objFromDb == null)
@@ -69,6 +73,9 @@ namespace Click_Go.Controllers
 
             _context.Users.Update(objFromDb);
             _context.SaveChanges();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            await _postService.UpdatePostAsync(userId);
 
             return Ok(new{ success = true, message = "Thao tác thành công", lockoutEnd = objFromDb.LockoutEnd });
         }

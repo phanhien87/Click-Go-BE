@@ -310,5 +310,18 @@ namespace Click_Go.Services
             }
             return postReadDtos;
         }
+
+        public async Task UpdatePostAsync(string userId)
+        {
+            var postsList = await _postRepository.GetByUserIdAsync(userId);
+            if (postsList != null)
+            {
+                foreach (var post in postsList)
+                {
+                    post.Status = 0;
+                }
+                await _postRepository.UpdatePostAsync(postsList.ToList());
+            }
+        }
     }
 }

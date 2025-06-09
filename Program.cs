@@ -141,9 +141,7 @@ namespace Click_Go
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseMiddleware<BanCheckMiddleware>();
-            app.UseMiddleware<ExceptionMiddleware>();
-            app.UseMiddleware<UserPackageValidationMiddleware>();
+            
             
 
             app.UseCors("AllowReactApp");
@@ -154,11 +152,17 @@ namespace Click_Go
             }
             
             app.UseSession();
+            app.UseRouting();
+
+            app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<BanCheckMiddleware>();
+            app.UseMiddleware<UserPackageValidationMiddleware>();
 
             app.UseAuthentication();
             
             app.UseAuthorization();
 
+          
             // Cho phép truy cập thư mục UploadedFiles như một static folder
             app.UseStaticFiles(new StaticFileOptions
             {

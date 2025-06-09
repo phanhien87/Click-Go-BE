@@ -25,10 +25,10 @@ namespace Click_Go.Middleware
                         userPackage.Status = 0;
                         await userPackageRepository.UpdateAsync(userPackage);
                     }
+                }
 
-                   
+                
             }
-
             await _next(context);
         }
     }

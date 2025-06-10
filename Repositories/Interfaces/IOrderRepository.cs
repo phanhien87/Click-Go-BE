@@ -11,5 +11,6 @@ namespace Click_Go.Repositories.Interfaces
         Task UpdateAsync(Order order);
         Task<List<OrderCodeDto>> GetOrdersAsync();
         Task<Order> GetOrderListByUserIdAndPackageId(string id, long packageId);
+        Task<long?> GetTotalRevenue(DateTime? from, DateTime? to);
     }
 }

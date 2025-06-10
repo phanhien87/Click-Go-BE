@@ -111,5 +111,11 @@ namespace Click_Go.Repositories
             _context.Posts.UpdateRange(post);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<int> GetTotalPostAsync(int? status)
+        {
+            if (status.HasValue) return await _context.Posts.CountAsync(p => p.Status == status);
+            else return await _context.Posts.CountAsync();
+        }
     }
 }

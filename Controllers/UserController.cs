@@ -64,18 +64,19 @@ namespace Click_Go.Controllers
             {
                 // Unlock  
                 objFromDb.LockoutEnd = DateTime.Now;
+                await _postService.LockPostAsync(objFromDb.Id, 1);
             }
             else
             {
                 // Lock
                 objFromDb.LockoutEnd = DateTime.Now.AddYears(1000);
+                await _postService.LockPostAsync(objFromDb.Id, 0);
             }
 
             _context.Users.Update(objFromDb);
             _context.SaveChanges();
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await _postService.UpdatePostAsync(userId);
+            
 
             return Ok(new{ success = true, message = "Thao tác thành công", lockoutEnd = objFromDb.LockoutEnd });
         }

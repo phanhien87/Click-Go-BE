@@ -311,14 +311,14 @@ namespace Click_Go.Services
             return postReadDtos;
         }
 
-        public async Task UpdatePostAsync(string userId)
+        public async Task LockPostAsync(string userId, int status)
         {
             var postsList = await _postRepository.GetByUserIdAsync(userId);
             if (postsList != null)
             {
                 foreach (var post in postsList)
                 {
-                    post.Status = 0;
+                    post.Status = status;
                 }
                 await _postRepository.UpdatePostAsync(postsList.ToList());
             }

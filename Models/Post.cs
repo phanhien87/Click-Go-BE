@@ -9,7 +9,7 @@
         public string? SDT { get; set; }
         public string? Address { get; set; }
         public string? Description { get; set; }
-
+        public double? Price { get; set; }
         public long CategoryId { get; set; }
         public Category Category { get; set; }
 
@@ -21,5 +21,6 @@
         public ICollection<Comment> Comments { get; set; }
         public ICollection<Rating> Ratings { get; set; }
         public virtual ICollection<Wishlist> WishlistedByUsers { get; set; }
+        public ICollection<Tag>? Tags { get; set; }
     }
 }

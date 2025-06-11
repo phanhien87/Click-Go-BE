@@ -24,7 +24,7 @@ namespace Click_Go.Repositories
 
         public async Task<UserPackage> CheckPackageByUserId(string userId)
         {
-               return await _context.UserPackages.Where(up => up.Status == 1).FirstOrDefaultAsync(up => up.UserId == userId);    
+               return await _context.UserPackages.Where(up => up.Status == 1).OrderByDescending(up=> up.CreatedDate).FirstOrDefaultAsync(up => up.UserId == userId);    
         }
 
         public async Task<List<UserPackage>> GetAllAsync()

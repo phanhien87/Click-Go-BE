@@ -20,9 +20,11 @@ public class PayOSService
     private readonly IOrderRepository _orderRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEmailService _emailService;
+    private readonly IPostService _postService;
     public PayOSService(IOptions<PayOSOptions> options, IHttpContextAccessor httpContextAccessor,
         UserManager<ApplicationUser> userManager, IUserPackageRepository userPackageRepository,
-        IPackageRepository packageRepository, IOrderRepository orderRepository, IEmailService emailService)
+        IPackageRepository packageRepository, IOrderRepository orderRepository, IEmailService emailService,
+        IPostService postService)
     {
         var opts = options.Value;
         _payOS = new PayOS(opts.ClientId, opts.ApiKey, opts.ChecksumKey);
@@ -31,6 +33,7 @@ public class PayOSService
         _userManager = userManager;
         _orderRepository = orderRepository;
         _emailService = emailService;
+        _postService = postService;
     }
 
     public async Task<PaymentResult> CreatePaymentLink(long packageId, string returnUrl, string cancelUrl,string userId)
@@ -136,10 +139,13 @@ public class PayOSService
                     <p>Chúng tôi đã nhận được thanh toán của bạn cho gói <strong>{order.Package.Name}</strong>.</p>
                     <p>Giao dịch của bạn đã được xác nhận vào lúc {order.transactionDateTime:dd/MM/yyyy HH:mm}.</p>
                     <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
-                    <p>Trân trọng,<br/>Đội ngũ hỗ trợ - 0963009178</p>";
+                    <p>Trân trọng,<br/>Đội ngũ hỗ trợ - 0963009178 - hienpmhe180216@fpt.edu.vn</p>";
 
                     await _emailService.SendEmailAsync(user.Email, subject, body);
                 }
+
+                //Unlock Post if post is existed
+                await _postService.LockPostAsync(order.UserId, 1);
 
                 return true;
             }

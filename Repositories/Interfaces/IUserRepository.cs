@@ -7,6 +7,6 @@ namespace Click_Go.Repositories.Interfaces
     {
         Task<UpdateProfileDto> GetProfileAsync(string? id);
         Task UpdateAsync(UpdateProfileDto dto);
-
+        Task<int> GetTotalUser();
     }
 }

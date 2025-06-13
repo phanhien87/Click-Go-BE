@@ -7,5 +7,6 @@ namespace Click_Go.Services.Interfaces
     {
         Task<UpdateProfileDto> GetProfileAsync(string userId);
         Task UpdateAsync(UpdateProfileDto dto);
+        Task<GetTotalDto> GetTotal(int? statusPost,DateTime? from,DateTime? to);
     }
 }

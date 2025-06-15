@@ -32,6 +32,15 @@ namespace Click_Go.Repositories
 
         }
 
+        public async Task<int> GetTotalUser()
+        {
+            return await (from UserRole in _context.UserRoles
+                          join Role in _context.Roles on UserRole.RoleId equals Role.Id
+                          where Role.Name == "CUSTOMER"
+                          select UserRole
+                          ).CountAsync();
+        }
+
         public async Task UpdateAsync(UpdateProfileDto dto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);

@@ -15,6 +15,7 @@ namespace Click_Go.Repositories.Interfaces
         Task<IEnumerable<Post>> GetAllAsync();
         Task<UserPackage> GetUserPackageByUserIdAsync(string userId);
         Task UpdatePostAsync(List<Post> post);
+        Task<int> GetTotalPostAsync(int? status);
         Task<List<Tag>> GetTagsByIdsAsync(List<long> tagIds);
     }
 }

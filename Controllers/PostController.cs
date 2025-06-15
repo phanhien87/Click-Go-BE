@@ -15,7 +15,7 @@ namespace Click_Go.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] 
+    [Authorize(Roles = nameof(Enum.Application_Role.CUSTOMER))] 
     public class PostController : ControllerBase
     {
         private readonly IPostService _postService;

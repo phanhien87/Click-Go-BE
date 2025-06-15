@@ -1,4 +1,5 @@
 ﻿using Click_Go.Repositories.Interfaces;
+using Click_Go.Services.Interfaces;
 
 namespace Click_Go.Middleware
 {
@@ -10,7 +11,7 @@ namespace Click_Go.Middleware
         {
             _next = next;
         }
-        public async Task InvokeAsync(HttpContext context, IUserPackageRepository userPackageRepository)
+        public async Task InvokeAsync(HttpContext context, IUserPackageRepository userPackageRepository, IPostService postService)
         {
             if (context.User.Identity.IsAuthenticated)
             {
@@ -24,6 +25,7 @@ namespace Click_Go.Middleware
                     {
                         userPackage.Status = 0;
                         await userPackageRepository.UpdateAsync(userPackage);
+                        await postService.LockPostAsync(userId,0);
                     }
                 }
 

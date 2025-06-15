@@ -3,6 +3,7 @@ using Click_Go.DTOs;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Click_Go.Repositories
 {
@@ -56,6 +57,27 @@ namespace Click_Go.Repositories
                 TransactionId = order.TransactionId,
                 Package = order.Package,
             }).ToList();
+        }
+
+        public async Task<long?> GetTotalRevenue(DateTime? from, DateTime? to)
+        {
+            IQueryable<Order> query = _context.Orders.Where(o => o.Status == Enum.OrderStatus.Paid);
+            if(from.HasValue || to.HasValue)
+            {
+                if (from.HasValue)
+                {
+
+                    query = query.Where(o => o.CreatedDate >= from.Value);
+                }
+                if (to.HasValue)
+                {
+
+                    query = query.Where(o => o.CreatedDate <= to.Value);
+                }
+                return await query.SumAsync(o => o.Amount);
+            }
+        
+            else  return await query.SumAsync(o => o.Amount);
         }
 
         public async Task UpdateAsync(Order order)

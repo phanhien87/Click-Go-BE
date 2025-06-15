@@ -159,13 +159,15 @@ namespace Click_Go
             app.UseSession();
             app.UseRouting();
 
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+            
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<BanCheckMiddleware>();
             app.UseMiddleware<UserPackageValidationMiddleware>();
 
-            app.UseAuthentication();
-            
-            app.UseAuthorization();
+           
 
           
             // Cho phép truy cập thư mục UploadedFiles như một static folder

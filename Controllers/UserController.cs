@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Net.WebSockets;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Click_Go.Data;
 using Click_Go.DTOs;
@@ -20,11 +21,13 @@ namespace Click_Go.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPostService _postService;
-        public UserController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IPostService postService)
+        private readonly IUserService _userService;
+        public UserController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IPostService postService, IUserService userService)
         {
             _context = context;
             _userManager = userManager;
             _postService = postService;
+            _userService = userService;
         }
 
         // GET: api/User
@@ -75,10 +78,13 @@ namespace Click_Go.Controllers
 
             _context.Users.Update(objFromDb);
             _context.SaveChanges();
-
-            
-
             return Ok(new{ success = true, message = "Thao tác thành công", lockoutEnd = objFromDb.LockoutEnd });
+        }
+        [HttpGet("GetTotal")]
+        public async Task<IActionResult> GetTotalUser([FromQuery] int? statusPost, DateTime? from, DateTime? to)
+        {
+            var totalUser = await _userService.GetTotal(statusPost, from,to);
+            return Ok(totalUser);
         }
     }
 }

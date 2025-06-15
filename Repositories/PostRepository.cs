@@ -150,6 +150,12 @@ namespace Click_Go.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<int> GetTotalPostAsync(int? status)
+        {
+            if (status.HasValue) return await _context.Posts.CountAsync(p => p.Status == status);
+            else return await _context.Posts.CountAsync();
+        }
+
         public async Task<List<Tag>> GetTagsByIdsAsync(List<long> tagIds)
         {
             return await _context.Tags.Where(t => tagIds.Contains(t.Id)).ToListAsync();

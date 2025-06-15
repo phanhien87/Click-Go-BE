@@ -93,30 +93,62 @@ namespace Click_Go.Controllers
         [AllowAnonymous]
         [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> SearchPosts([FromQuery] PostSearchDto searchDto) // Changed parameter
+        public async Task<IActionResult> SearchPosts([FromQuery] PostSearchDto searchDto)
         {
             // Validate that at least one search parameter is provided
-            if (searchDto == null || 
-                (string.IsNullOrWhiteSpace(searchDto.PostName) && 
-                 string.IsNullOrWhiteSpace(searchDto.District) && 
-                 string.IsNullOrWhiteSpace(searchDto.Ward) && 
-                 string.IsNullOrWhiteSpace(searchDto.City)))
+            if (searchDto == null)
             {
                 return BadRequest(new ProblemDetails 
                 { 
                     Title = "Bad Request", 
-                    Detail = "At least one search parameter (postName, district, ward, or city) must be provided."
+                    Detail = "Search criteria cannot be null."
                 });
             }
 
-            _logger.LogInformation("Attempting to search posts with criteria: {SearchCriteria}", searchDto);
+            bool hasSearchCriteria = 
+                !string.IsNullOrWhiteSpace(searchDto.PostName) ||
+                !string.IsNullOrWhiteSpace(searchDto.District) || 
+                !string.IsNullOrWhiteSpace(searchDto.Ward) || 
+                !string.IsNullOrWhiteSpace(searchDto.City) ||
+                (searchDto.TagNames != null && searchDto.TagNames.Any(t => !string.IsNullOrWhiteSpace(t))) ||
+                searchDto.MinPrice.HasValue ||
+                searchDto.MaxPrice.HasValue;
+
+            if (!hasSearchCriteria)
+            {
+                return BadRequest(new ProblemDetails 
+                { 
+                    Title = "Bad Request", 
+                    Detail = "At least one search parameter must be provided."
+                });
+            }
+
+            // Validate price range if both min and max are provided
+            if (searchDto.MinPrice.HasValue && searchDto.MaxPrice.HasValue && 
+                searchDto.MinPrice.Value > searchDto.MaxPrice.Value)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Bad Request",
+                    Detail = "Minimum price cannot be greater than maximum price."
+                });
+            }
+
+            _logger.LogInformation("Attempting to search posts with criteria: {@SearchCriteria}", searchDto);
             
-            var result = await _postService.SearchPostsAsync(searchDto); // Changed method call
+            var result = await _postService.SearchPostsAsync(searchDto);
+            
             if (result == null || !result.Any())
             {
-                return NotFound(new ProblemDetails { Title = "Not Found", Detail = "No posts matched your search criteria." });
+                return NotFound(new ProblemDetails 
+                { 
+                    Title = "Not Found", 
+                    Detail = "No posts matched your search criteria." 
+                });
             }
+
             return Ok(result);
         }
 
@@ -145,6 +177,7 @@ namespace Click_Go.Controllers
                 SDT = post.SDT,
                 Address = post.Address,
                 Description = post.Description,
+                Price = post.Price,
                 CreatedDate = post.CreatedDate,
                 UpdatedDate = post.UpdatedDate,
                 Category = post.Category != null ? new CategoryDto
@@ -170,7 +203,12 @@ namespace Click_Go.Controllers
                 {
                     Id = img.Id,
                     ImagePath = img.ImagePath
-                }).ToList() ?? new List<ImageDto>()
+                }).ToList() ?? new List<ImageDto>(),
+                Tags = post.Tags?.Select(t => new TagDto
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                }).ToList() ?? new List<TagDto>()
             };
         }
     }

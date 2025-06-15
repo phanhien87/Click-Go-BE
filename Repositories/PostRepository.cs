@@ -32,6 +32,7 @@ namespace Click_Go.Repositories
                 .Include(p => p.User)
                 .Include(p => p.Images)
                 .Include(p => p.Opening_Hours)
+                .Include(p => p.Tags)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -43,6 +44,7 @@ namespace Click_Go.Repositories
                 .Include(p => p.User)
                 .Include(p => p.Images)
                 .Include(p => p.Opening_Hours)
+                .Include(p => p.Tags)
                 .ToListAsync();
         }
 
@@ -53,14 +55,23 @@ namespace Click_Go.Repositories
 
         public async Task<IEnumerable<Post>> SearchPostsAsync(PostSearchDto searchDto)
         {
-            var query = _context.Posts.AsQueryable();
+            // Start with an IQueryable that includes necessary related entities
+            var query = _context.Posts
+                .Include(p => p.Category)
+                .Include(p => p.User)
+                .Include(p => p.Images)
+                .Include(p => p.Opening_Hours)
+                .Include(p => p.Tags)
+                .AsQueryable();
 
+            // Filter by post name if provided
             if (!string.IsNullOrWhiteSpace(searchDto.PostName))
             {
-                query = query.Where(p => p.Name.ToLower().Contains(searchDto.PostName.ToLower().Trim()));
+                var postNameLower = searchDto.PostName.ToLower().Trim();
+                query = query.Where(p => p.Name != null && p.Name.ToLower().Contains(postNameLower));
             }
 
-            // Helper to process address components
+            // Process address components
             var addressComponents = new List<string>();
             if (!string.IsNullOrWhiteSpace(searchDto.District))
             {
@@ -75,18 +86,44 @@ namespace Click_Go.Repositories
                 addressComponents.Add(searchDto.City.ToLower().Trim());
             }
 
+            // Apply address filtering if components exist
             if (addressComponents.Any())
             {
                 query = query.Where(p => p.Address != null && 
                                          addressComponents.All(comp => p.Address.ToLower().Contains(comp)));
             }
+
+            // Fix tag filtering to use a technique EF Core can translate to SQL
+            if (searchDto.TagNames != null && searchDto.TagNames.Any(t => !string.IsNullOrWhiteSpace(t)))
+            {
+                var lowerCaseTagNames = searchDto.TagNames
+                    .Where(tn => !string.IsNullOrWhiteSpace(tn))
+                    .Select(tn => tn.ToLower().Trim())
+                    .Distinct()
+                    .ToList();
+
+                // Materialize posts to perform tag filtering in memory
+                var postsWithIncludes = await query.ToListAsync();
+
+                // Filter in memory for tags (ALL logic)
+                return postsWithIncludes.Where(p => 
+                    p.Tags != null && 
+                    lowerCaseTagNames.All(tagName => 
+                        p.Tags.Any(t => t.Name.ToLower() == tagName)));
+            }
+
+            // Apply price range filters
+            if (searchDto.MinPrice.HasValue)
+            {
+                query = query.Where(p => p.Price.HasValue && p.Price >= searchDto.MinPrice.Value);
+            }
+
+            if (searchDto.MaxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price.HasValue && p.Price <= searchDto.MaxPrice.Value);
+            }
             
-            return await query
-                .Include(p => p.Category)
-                .Include(p => p.User)
-                .Include(p => p.Images)
-                .Include(p => p.Opening_Hours)
-                .ToListAsync();
+            return await query.ToListAsync();
         }
 
         public async Task<IEnumerable<Post>> GetAllAsync()
@@ -96,6 +133,7 @@ namespace Click_Go.Repositories
                 .Include(p => p.User)
                 .Include(p => p.Opening_Hours)
                 .Include(p => p.Images)
+                .Include(p => p.Tags)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
         }
@@ -110,6 +148,11 @@ namespace Click_Go.Repositories
         {
             _context.Posts.UpdateRange(post);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<Tag>> GetTagsByIdsAsync(List<long> tagIds)
+        {
+            return await _context.Tags.Where(t => tagIds.Contains(t.Id)).ToListAsync();
         }
     }
 }

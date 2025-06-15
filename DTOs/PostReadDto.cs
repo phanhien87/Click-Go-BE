@@ -20,6 +20,8 @@ namespace Click_Go.DTOs
         public UserDto User { get; set; }
         public List<OpeningHourDto> OpeningHours { get; set; }
         public List<ImageDto> Images { get; set; }
+        public double? Price { get; set; }
+        public List<TagDto> Tags { get; set; }
         // Add other collections like Comments, Ratings if needed in the future
 
         // New fields for detailed post information
@@ -30,6 +32,7 @@ namespace Click_Go.DTOs
         {
             OpeningHours = new List<OpeningHourDto>();
             Images = new List<ImageDto>();
+            Tags = new List<TagDto>();
         }
     }
 } 

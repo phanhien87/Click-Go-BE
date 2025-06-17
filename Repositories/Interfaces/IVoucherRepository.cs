@@ -9,12 +9,11 @@ namespace Click_Go.Repositories.Interfaces
     {
 
         Task<List<Voucher>> GetallByPostIdAsync(long id);
-       
-
         Task<Voucher> CreateAsync(VoucherProcessDto dto);
         Task<Voucher?> UpdateAsync(long id, VoucherProcessDto dto);
         Task<Voucher?> GetByIdAsync(long id);
         Task<Voucher?> GetByCodeAsync(string code);
+        Task UpdateUsedCountAsync(long idVoucher, bool action);
 
     }
 }

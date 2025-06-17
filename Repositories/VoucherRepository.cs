@@ -1,5 +1,6 @@
-using Click_Go.Data;
+﻿using Click_Go.Data;
 using Click_Go.DTOs;
+using Click_Go.Helper;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +19,8 @@ namespace Click_Go.Repositories
 
         async Task<List<Voucher>> IVoucherRepository.GetallByPostIdAsync(long id)
         {
-          return await _context.Vouchers.Where(v => v.PostId == id).ToListAsync();
-
+            return await _context.Vouchers.Where(v => v.PostId == id).ToListAsync();
+        }
         public async Task<Voucher> CreateAsync(VoucherProcessDto dto)
         {
             var voucher = new Voucher
@@ -33,7 +34,8 @@ namespace Click_Go.Repositories
                 IsActive = dto.IsActive,
                 UsageLimit = dto.UsageLimit,
                 UsedCount = dto.UsedCount,
-                PostId = dto.PostId
+                PostId = dto.PostId,
+                Status = 1
             };
             _context.Vouchers.Add(voucher);
             await _context.SaveChangesAsync();
@@ -53,7 +55,7 @@ namespace Click_Go.Repositories
             existing.EndDate = dto.EndDate;
             existing.IsActive = dto.IsActive;
             existing.UsageLimit = dto.UsageLimit;
-            existing.UsedCount = dto.UsedCount;
+            existing.UsedCount = dto.UsedCount ?? 0;
             existing.PostId = dto.PostId;
 
             await _context.SaveChangesAsync();
@@ -64,11 +66,26 @@ namespace Click_Go.Repositories
         {
             return await _context.Vouchers.FindAsync(id);
         }
-        
+
         public async Task<Voucher?> GetByCodeAsync(string code)
         {
             return await _context.Vouchers.FirstOrDefaultAsync(x => x.Code == code);
 
+        }
+
+        public async Task UpdateUsedCountAsync(long idVoucher, bool action)
+        {
+            var vouncher = await _context.Vouchers.FindAsync(idVoucher);
+
+            if (vouncher == null) throw new NotFoundException("Không tìm thấy vouncher nào!");
+
+            vouncher.UsedCount = action ? ++vouncher.UsedCount : --vouncher.UsedCount;
+
+            if (vouncher.UsedCount <= 0) vouncher.IsActive = false;
+
+            if (vouncher.UsedCount > vouncher.UsageLimit) throw new AppException("Đã vượt quá giới hạn voucher!");
+
+            await _context.SaveChangesAsync();
         }
     }
 }

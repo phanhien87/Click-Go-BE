@@ -1,4 +1,5 @@
 ﻿using Click_Go.DTOs;
+using Click_Go.Helper;
 using Click_Go.Models;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -55,6 +56,20 @@ namespace Click_Go.Controllers
             return Ok(voucher);
         }
 
+        [HttpGet("GetAllVoucher/{idPost}")]
+        public async Task<IActionResult> GetAllVoucherByPostId(long idPost)
+        {
+            var listVoucher = await _voucherService.GetAllVoucherByPostIdAsync(idPost);
+            if (listVoucher == null) throw new NotFoundException("Not Found");
+            return Ok(listVoucher);
+        }
+
+        [HttpPut("{idVoucher}/used-count")]
+        public async Task<IActionResult> UpdateUsedCount(long idVoucher, [FromBody] bool action)
+        {
+            await _voucherService.UpdateUsedCountAsync(idVoucher, action);
+            return NoContent();
+        }
 
     }
 }

@@ -15,7 +15,7 @@
 
         public string UserId { get; set; }
         public ApplicationUser User { get; set; }
-
+        public ICollection<Voucher> Voucher { get; set; }
         public ICollection<OpeningHour> Opening_Hours { get; set; }
         public ICollection<Image> Images { get; set; }
         public ICollection<Comment> Comments { get; set; }

@@ -47,6 +47,7 @@ namespace Click_Go
             builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
+            builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
             
 
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -60,6 +61,8 @@ namespace Click_Go
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ITagService, TagService>();
+            builder.Services.AddScoped<IVoucherService, VoucherService>();
+
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
             builder.Services.AddScoped<PayOSService>();

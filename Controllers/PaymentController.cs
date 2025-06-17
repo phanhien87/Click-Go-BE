@@ -44,9 +44,8 @@ namespace Click_Go.Controllers
 
             try
             {
-               
-                var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier); // có thể null
-                var status = await _payOSService.ConfirmPayment(request, userId);
+              
+                var status = await _payOSService.ConfirmPayment(request);
 
                 if (status)
                 {

@@ -22,6 +22,8 @@ namespace Click_Go.Data
         public DbSet<Package> Packages { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<Wishlist> Wishlists { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<Voucher> Vouchers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

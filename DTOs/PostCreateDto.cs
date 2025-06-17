@@ -14,7 +14,9 @@ namespace Click_Go.DTOs
         
         public string? City { get; set; }
         public string Description { get; set; }
+        public double? Price { get; set; }
         public long CategoryId { get; set; }
+        public List<long>? TagIds { get; set; }
         public IFormFile? LogoImage { get; set; } // Single file for logo
         public IFormFile? BackgroundImage { get; set; } // Single file for background
         public List<IFormFile>? OtherImages { get; set; } // Multiple files for general images

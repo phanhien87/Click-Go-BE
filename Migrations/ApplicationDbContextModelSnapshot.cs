@@ -387,7 +387,6 @@ namespace Click_Go.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("transactionDateTime")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -480,6 +479,9 @@ namespace Click_Go.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Price")
+                        .HasColumnType("float");
 
                     b.Property<string>("SDT")
                         .HasColumnType("nvarchar(max)");
@@ -606,6 +608,44 @@ namespace Click_Go.Migrations
                     b.ToTable("RatingDetails");
                 });
 
+            modelBuilder.Entity("Click_Go.Models.Tag", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CREATED_DATE");
+
+                    b.Property<Guid?>("CreatedUser")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CREATED_USER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("UPDATED_DATE");
+
+                    b.Property<Guid?>("UpdatedUser")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UPDATED_USER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tags");
+                });
+
             modelBuilder.Entity("Click_Go.Models.UserPackage", b =>
                 {
                     b.Property<long>("Id")
@@ -655,6 +695,74 @@ namespace Click_Go.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserPackages");
+                });
+
+            modelBuilder.Entity("Click_Go.Models.Voucher", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CREATED_DATE");
+
+                    b.Property<Guid?>("CreatedUser")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CREATED_USER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("DiscountAmount")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("DiscountPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("PostId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("UPDATED_DATE");
+
+                    b.Property<Guid?>("UpdatedUser")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UPDATED_USER");
+
+                    b.Property<int?>("UsageLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UsedCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("Vouchers");
                 });
 
             modelBuilder.Entity("Click_Go.Models.Wishlist", b =>
@@ -808,6 +916,21 @@ namespace Click_Go.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("PostTag", b =>
+                {
+                    b.Property<long>("PostsId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TagsId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("PostsId", "TagsId");
+
+                    b.HasIndex("TagsId");
+
+                    b.ToTable("PostTag");
+                });
+
             modelBuilder.Entity("Click_Go.Models.Comment", b =>
                 {
                     b.HasOne("Click_Go.Models.Comment", "Parent")
@@ -959,6 +1082,17 @@ namespace Click_Go.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Click_Go.Models.Voucher", b =>
+                {
+                    b.HasOne("Click_Go.Models.Post", "Post")
+                        .WithMany("Voucher")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("Click_Go.Models.Wishlist", b =>
                 {
                     b.HasOne("Click_Go.Models.Post", "Post")
@@ -1029,6 +1163,21 @@ namespace Click_Go.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PostTag", b =>
+                {
+                    b.HasOne("Click_Go.Models.Post", null)
+                        .WithMany()
+                        .HasForeignKey("PostsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Click_Go.Models.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Click_Go.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Post");
@@ -1059,6 +1208,8 @@ namespace Click_Go.Migrations
                     b.Navigation("Opening_Hours");
 
                     b.Navigation("Ratings");
+
+                    b.Navigation("Voucher");
 
                     b.Navigation("WishlistedByUsers");
                 });

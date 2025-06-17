@@ -73,13 +73,13 @@ namespace Click_Go.Services
             {
                 addressParts.Add(postDto.Street.Trim());
             }
-            if (!string.IsNullOrWhiteSpace(postDto.District))
-            {
-                addressParts.Add(postDto.District.Trim());
-            }
             if (!string.IsNullOrWhiteSpace(postDto.Ward))
             {
                 addressParts.Add(postDto.Ward.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(postDto.District))
+            {
+                addressParts.Add(postDto.District.Trim());
             }
             if (!string.IsNullOrWhiteSpace(postDto.City))
             {
@@ -94,6 +94,7 @@ namespace Click_Go.Services
                 SDT = postDto.SDT,
                 Address = combinedAddress,
                 Description = postDto.Description,
+                Price = postDto.Price,
                 CategoryId = postDto.CategoryId,
                 UserId = userId,
                 Images = new List<Image>(),
@@ -102,6 +103,12 @@ namespace Click_Go.Services
                 Status = 1,
                 CreatedUser = Guid.Parse(userId)
             };
+
+            if (postDto.TagIds != null && postDto.TagIds.Any())
+            {
+                var tags = await _postRepository.GetTagsByIdsAsync(postDto.TagIds);
+                post.Tags = tags;
+            }
 
             if (postDto.LogoImage != null)
             {
@@ -234,6 +241,7 @@ namespace Click_Go.Services
                 SDT = post.SDT,
                 Address = post.Address,
                 Description = post.Description,
+                Price = post.Price,
                 CreatedDate = post.CreatedDate,
                 UpdatedDate = post.UpdatedDate,
                 Category = post.Category != null ? new CategoryDto
@@ -250,7 +258,7 @@ namespace Click_Go.Services
                 OpeningHours = post.Opening_Hours?.Select(oh => new OpeningHourDto
                 {
                     DayOfWeek = oh.DayOfWeek,
-                    OpenHour = oh.OpenHour ?? 0,
+                    OpenHour = oh.OpenHour ?? 0, // Provide default if nullable
                     OpenMinute = oh.OpenMinute ?? 0,
                     CloseHour = oh.CloseHour ?? 0,
                     CloseMinute = oh.CloseMinute ?? 0
@@ -260,19 +268,52 @@ namespace Click_Go.Services
                     Id = img.Id,
                     ImagePath = img.ImagePath
                 }).ToList() ?? new List<ImageDto>(),
+                Tags = post.Tags?.Select(t => new TagDto
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                }).ToList() ?? new List<TagDto>(),
                 TotalComments = totalComments,
                 AverageStars = averageStars
             };
         }
         public async Task<IEnumerable<PostReadDto>> SearchPostsAsync(PostSearchDto searchDto)
         {
-            if (searchDto == null || 
-                (string.IsNullOrWhiteSpace(searchDto.PostName) && 
-                 string.IsNullOrWhiteSpace(searchDto.District) && 
-                 string.IsNullOrWhiteSpace(searchDto.Ward) && 
-                 string.IsNullOrWhiteSpace(searchDto.City)))
+            // Validate search criteria
+            if (searchDto == null)
             {
                 return Enumerable.Empty<PostReadDto>();
+            }
+
+            bool hasSearchCriteria = 
+                !string.IsNullOrWhiteSpace(searchDto.PostName) ||
+                !string.IsNullOrWhiteSpace(searchDto.District) || 
+                !string.IsNullOrWhiteSpace(searchDto.Ward) || 
+                !string.IsNullOrWhiteSpace(searchDto.City) ||
+                (searchDto.TagNames != null && searchDto.TagNames.Any(t => !string.IsNullOrWhiteSpace(t))) ||
+                searchDto.MinPrice.HasValue ||
+                searchDto.MaxPrice.HasValue;
+
+            if (!hasSearchCriteria)
+            {
+                return Enumerable.Empty<PostReadDto>();
+            }
+
+            // Clean up tag names if provided
+            if (searchDto.TagNames != null)
+            {
+                // Filter out empty tags
+                searchDto.TagNames = searchDto.TagNames
+                    .Where(tn => !string.IsNullOrWhiteSpace(tn))
+                    .Select(tn => tn.Trim())
+                    .Distinct()
+                    .ToList();
+                
+                // If all tags were empty, set to null
+                if (!searchDto.TagNames.Any())
+                {
+                    searchDto.TagNames = null;
+                }
             }
 
             var posts = await _postRepository.SearchPostsAsync(searchDto);
@@ -309,6 +350,19 @@ namespace Click_Go.Services
                 postReadDtos.Add(MapPostToReadDto(post, totalComments, averageStars));
             }
             return postReadDtos;
+        }
+
+        public async Task LockPostAsync(string userId, int status)
+        {
+            var postsList = await _postRepository.GetByUserIdAsync(userId);
+            if (postsList != null)
+            {
+                foreach (var post in postsList)
+                {
+                    post.Status = status;
+                }
+                await _postRepository.UpdatePostAsync(postsList.ToList());
+            }
         }
     }
 }

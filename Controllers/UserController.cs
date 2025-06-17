@@ -1,6 +1,10 @@
-﻿using Click_Go.Data;
+﻿using System.Net.WebSockets;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Click_Go.Data;
 using Click_Go.DTOs;
 using Click_Go.Models;
+using Click_Go.Services.Interfaces;
 using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -16,11 +20,14 @@ namespace Click_Go.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public UserController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly IPostService _postService;
+        private readonly IUserService _userService;
+        public UserController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IPostService postService, IUserService userService)
         {
             _context = context;
             _userManager = userManager;
+            _postService = postService;
+            _userService = userService;
         }
 
         // GET: api/User
@@ -48,7 +55,7 @@ namespace Click_Go.Controllers
         [HttpPost("Lock-Unlock/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult LockUnlock(string id)
+        public async Task<IActionResult> LockUnlock(string id)
         {
             var objFromDb = _context.Users.Find(id);
             if (objFromDb == null)
@@ -60,17 +67,24 @@ namespace Click_Go.Controllers
             {
                 // Unlock  
                 objFromDb.LockoutEnd = DateTime.Now;
+                await _postService.LockPostAsync(objFromDb.Id, 1);
             }
             else
             {
                 // Lock
                 objFromDb.LockoutEnd = DateTime.Now.AddYears(1000);
+                await _postService.LockPostAsync(objFromDb.Id, 0);
             }
 
             _context.Users.Update(objFromDb);
             _context.SaveChanges();
-
             return Ok(new{ success = true, message = "Thao tác thành công", lockoutEnd = objFromDb.LockoutEnd });
+        }
+        [HttpGet("GetTotal")]
+        public async Task<IActionResult> GetTotalUser([FromQuery] int? statusPost, DateTime? from, DateTime? to)
+        {
+            var totalUser = await _userService.GetTotal(statusPost, from,to);
+            return Ok(totalUser);
         }
     }
 }

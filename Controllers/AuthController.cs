@@ -57,44 +57,69 @@ namespace Click_Go.Controllers
         [HttpGet("external-login-callback")]
         public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
         {
+            string frontendUrl = "http://localhost:3000"; // URL frontend của bạn
+
             if (remoteError != null)
-                return BadRequest($"Error: {remoteError}");
+                return Redirect($"{frontendUrl}/login?error={remoteError}");
 
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
-                return BadRequest("Error loading external login information.");
+                return Redirect($"{frontendUrl}/login?error=Không thể lấy thông tin đăng nhập");
 
             var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
+
             if (signInResult.Succeeded)
             {
-                // Tạo jwt
+                // Lấy user và tạo token
                 var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
                 var token = await _authService.GenerateJwtTokenAsync(user);
-                return Ok(new { token });
+
+                // Redirect về frontend kèm token
+                return Redirect($"{frontendUrl}/login?token={token}");
             }
             else
             {
-                // Tk mới
+                // Xử lý tạo user mới
                 var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                if (email == null)
-                    return BadRequest("Email not available.");
+                var existingUser = await _userManager.FindByEmailAsync(email);
 
-                var user = new ApplicationUser
+                if (existingUser != null)
                 {
-                    UserName = email.Split('@')[0],
-                    Email = email,
-                    FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email.Split('@')[0]
-                };
+                    // User đã tồn tại nhưng chưa liên kết với Google
+                    var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
+                    if (addLoginResult.Succeeded)
+                    {
+                        var token = await _authService.GenerateJwtTokenAsync(existingUser);
+                        return Redirect($"{frontendUrl}/login?token={token}");
+                    }
+                    return Redirect($"{frontendUrl}/login?error=Liên kết tài khoản thất bại");
+                }
+                else
+                {
+                    var user = new ApplicationUser
+                    {
+                        UserName = email.Split('@')[0],
+                        Email = email,
+                        FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email.Split('@')[0]
+                    };
 
-                var result = await _userManager.CreateAsync(user);
-                if (!result.Succeeded)
-                    return BadRequest(result.Errors);
+                    var createResult = await _userManager.CreateAsync(user);
 
-                await _userManager.AddLoginAsync(user, info);
-                await _userManager.AddToRoleAsync(user, "CUSTOMER");
+                    if (createResult.Succeeded)
+                    {
+                        await _userManager.AddLoginAsync(user, info);
+                        await _userManager.AddToRoleAsync(user, "CUSTOMER");
 
-                var token = await _authService.GenerateJwtTokenAsync(user);
-                return Ok(new { token });
+                        var token = await _authService.GenerateJwtTokenAsync(user);
+                        return Redirect($"{frontendUrl}/login?token={token}");
+                    }
+                    else
+                    {
+                        // TODO: xử lý lỗi tạo user
+                        return Redirect($"{frontendUrl}/login?error=Tạo tài khoản thất bại");
+                    }
+                   
+                }
             }
         }
 

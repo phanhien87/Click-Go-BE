@@ -1,4 +1,4 @@
-﻿using Click_Go.Data;
+using Click_Go.Data;
 using Click_Go.DTOs;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
@@ -14,6 +14,11 @@ namespace Click_Go.Repositories
         {
             _context = context;
         }
+
+
+        async Task<List<Voucher>> IVoucherRepository.GetallByPostIdAsync(long id)
+        {
+          return await _context.Vouchers.Where(v => v.PostId == id).ToListAsync();
 
         public async Task<Voucher> CreateAsync(VoucherProcessDto dto)
         {
@@ -63,6 +68,7 @@ namespace Click_Go.Repositories
         public async Task<Voucher?> GetByCodeAsync(string code)
         {
             return await _context.Vouchers.FirstOrDefaultAsync(x => x.Code == code);
+
         }
     }
 }

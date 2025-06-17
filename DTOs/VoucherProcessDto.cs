@@ -1,10 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace Click_Go.Models
+namespace Click_Go.DTOs
 {
-    public class Voucher : BaseEntity
+    public class VoucherProcessDto
     {
-      
         [Required]
         [MaxLength(50)]
         public string Code { get; set; }
@@ -28,7 +27,6 @@ namespace Click_Go.Models
 
         public int? UsedCount { get; set; }
 
-        public long PostId { get; set; } 
-        public Post? Post { get; set; }
+        public long PostId { get; set; }
     }
 }

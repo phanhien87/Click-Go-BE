@@ -81,11 +81,11 @@ namespace Click_Go.Repositories
 
             vouncher.UsedCount = action ? ++vouncher.UsedCount : --vouncher.UsedCount;
 
-            if (vouncher.UsedCount <= 0) vouncher.IsActive = false;
+            if (vouncher.UsedCount == vouncher.UsageLimit) vouncher.IsActive = false;
+            else vouncher.IsActive = true;
 
-            if (vouncher.UsedCount > vouncher.UsageLimit) throw new AppException("Đã vượt quá giới hạn voucher!");
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
         }
     }
 }

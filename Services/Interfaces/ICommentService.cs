@@ -5,9 +5,12 @@ namespace Click_Go.Services.Interfaces
 {
     public interface ICommentService
     {
-        Task AddCommentAsync(CommentDto dto, string userId);
+        Task<long?> AddCommentAsync(CommentDto dto, string userId);
         Task<IEnumerable<Comment>> GetCommentsByPostIdAsync(long postId);
 
-        Task<List<GetCommentByPostDto>> GetCommentsByPostAsync(long postId, string? currentUserId = null);
+        Task<List<GetCommentByPostDto>> GetCommentsByPostAsync(long postId, string? currentUserId = null );
+
+        Task<Comment> GetParentCmtById(long? id);
+
     }
 }

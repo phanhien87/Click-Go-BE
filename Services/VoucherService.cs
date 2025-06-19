@@ -41,6 +41,7 @@ namespace Click_Go.Services
 
             return voucherList.Select(voucher => new AllVouncherDto
             {
+                idVoucher = voucher.Id,
                 Code = voucher.Code,
                 DiscountAmount = voucher.DiscountAmount,
                 DiscountPercentage = voucher.DiscountPercentage,

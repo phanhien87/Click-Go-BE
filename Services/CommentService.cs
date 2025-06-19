@@ -21,7 +21,7 @@ namespace Click_Go.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task AddCommentAsync(CommentDto dto, string userId)
+        public async Task<long?> AddCommentAsync(CommentDto dto, string userId)
         {
 
             var comment = new Comment
@@ -77,7 +77,7 @@ namespace Click_Go.Services
                 await Task.WhenAll(tasks); // Chờ tất cả ảnh lưu xong
                 await _imageRepo.AddImagesAsync(images);
             }
-
+            return comment.Id;
 
         }
 
@@ -97,7 +97,14 @@ namespace Click_Go.Services
             return await _commentRepo.GetByPostIdAsync(postId); 
         }
 
-        private async Task<List<GetCommentByPostDto>> BuildCommentTree(List<Comment> allComments, long? parentId = null, string? currentUserId = null)
+        public async Task<Comment> GetParentCmtById(long? id)
+        {
+           
+            return await _commentRepo.GetByIdAsync(id);
+        }
+
+        private async Task<List<GetCommentByPostDto>> BuildCommentTree(List<Comment> allComments, long? parentId = null,
+            string? currentUserId = null)
         {
             var comments = allComments.Where(c => c.ParentId == parentId)
                                .OrderBy(c => c.CreatedDate);
@@ -113,6 +120,7 @@ namespace Click_Go.Services
                 IsLike = currentUserId == null ? null : c.Reactions?.FirstOrDefault(r => r.UserId == currentUserId)?.IsLike,
                 LikeCount = c.Reactions?.Count(r => r.IsLike == true) ?? 0,
                 UnlikeCount = c.Reactions?.Count(r => r.IsLike == false) ?? 0,
+                //Level = level,
                 Replies = await BuildCommentTree(allComments, c.Id, currentUserId),
             }));
 

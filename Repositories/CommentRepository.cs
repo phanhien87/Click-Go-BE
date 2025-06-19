@@ -4,6 +4,7 @@ using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.CodeDom;
 
 namespace Click_Go.Repositories
 {
@@ -26,9 +27,9 @@ namespace Click_Go.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<Comment?> GetByIdAsync(long id)
+        public async Task<Comment?> GetByIdAsync(long? id)
         {
-            throw new NotImplementedException();
+            return await _context.Comments.FindAsync(id);
         }
 
         public async  Task<IEnumerable<Comment>> GetByPostIdAsync(long postId)

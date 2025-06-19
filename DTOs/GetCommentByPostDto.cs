@@ -14,6 +14,7 @@ namespace Click_Go.DTOs
         public bool? IsLike { get; set; } = null; 
         public int LikeCount { get; set; }
         public int UnlikeCount { get; set; }
+        public int Level { get; set; }
         public List<GetCommentByPostDto> Replies { get; set; } = new();
        
 

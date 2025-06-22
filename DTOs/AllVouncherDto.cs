@@ -5,7 +5,8 @@ namespace Click_Go.DTOs
 {
     public class AllVouncherDto
     {
-      
+
+        public long idVoucher { get; set; }
         public string Code { get; set; }
 
         public double DiscountAmount { get; set; }

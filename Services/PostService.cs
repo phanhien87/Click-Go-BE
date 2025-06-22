@@ -23,18 +23,21 @@ namespace Click_Go.Services
         private readonly IPostRepository _postRepository;
         private readonly ICommentService _commentService;
         private readonly IRatingRepository _ratingRepository;
+        private readonly ICommentRepository _commentRepository;
         public PostService(
             IWebHostEnvironment webHostEnvironment, 
             SaveImage saveImageHelper, 
             IPostRepository postRepository,
             IRatingRepository ratingRepository,
-            ICommentService commentService)
+            ICommentService commentService,
+            ICommentRepository commentRepository)
         {
             _webHostEnvironment = webHostEnvironment;
             _saveImageHelper = saveImageHelper;
             _postRepository = postRepository;
             _commentService = commentService;
             _ratingRepository = ratingRepository;
+            _commentRepository = commentRepository;
         }
 
         public async Task<Post> CreatePostAsync(PostCreateDto postDto, string userId)
@@ -178,10 +181,10 @@ namespace Click_Go.Services
                 throw new NotFoundException($"Post with ID {id} not found.");
             }
 
-            var comments = await _commentService.GetCommentsByPostAsync(id);
+            //var comments = await _commentService.GetCommentsByPostAsync(id);
             var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(id);
-            
-            int totalComments = comments?.Count() ?? 0;
+
+            int totalComments = await _commentRepository.GetTotalCommentByPost(id);
             double averageStars = CalculateAverageStars(overallRating);
 
             var postReadDto = MapPostToReadDto(post, totalComments, averageStars);
@@ -189,7 +192,7 @@ namespace Click_Go.Services
             return new GetPostDto 
             { 
                 Post = postReadDto, 
-                Comment = comments?.ToList() ?? new List<GetCommentByPostDto>(), 
+                //Comment = comments?.ToList() ?? new List<GetCommentByPostDto>(), 
                 Rating = overallRating 
             };
         }
@@ -211,10 +214,10 @@ namespace Click_Go.Services
             var resultList = new List<GetPostDto>();
             foreach (var post in posts)
             {
-                var comments = await _commentService.GetCommentsByPostAsync(post.Id);
+               // var comments = await _commentService.GetCommentsByPostAsync(post.Id);
                 var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
 
-                int totalComments = comments?.Count() ?? 0;
+                int totalComments = await _commentRepository.GetTotalCommentByPost(post.Id);
                 double averageStars = CalculateAverageStars(overallRating);
 
                 var postReadDto = MapPostToReadDto(post, totalComments, averageStars);
@@ -222,7 +225,7 @@ namespace Click_Go.Services
                 resultList.Add(new GetPostDto
                 {
                     Post = postReadDto,
-                    Comment = comments?.ToList() ?? new List<GetCommentByPostDto>(),
+                    //Comment = comments?.ToList() ?? new List<GetCommentByPostDto>(),
                     Rating = overallRating
                 });
             }
@@ -321,9 +324,9 @@ namespace Click_Go.Services
             var postReadDtos = new List<PostReadDto>();
             foreach (var post in posts)
             {
-                var comments = await _commentService.GetCommentsByPostAsync(post.Id);
+                //var comments = await _commentService.GetCommentsByPostAsync(post.Id);
                 var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
-                int totalComments = comments?.Count() ?? 0;
+                int totalComments =  await _commentRepository.GetTotalCommentByPost(post.Id);
                 double averageStars = CalculateAverageStars(overallRating);
                 postReadDtos.Add(MapPostToReadDto(post, totalComments, averageStars));
             }
@@ -341,10 +344,10 @@ namespace Click_Go.Services
             var postReadDtos = new List<PostReadDto>();
             foreach (var post in posts)
             {
-                var comments = await _commentService.GetCommentsByPostAsync(post.Id);
+                //var comments = await _commentService.GetCommentsByPostAsync(post.Id);
                 var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
                 
-                int totalComments = comments?.Count() ?? 0;
+                int totalComments =  await _commentRepository.GetTotalCommentByPost(post.Id);
                 double averageStars = CalculateAverageStars(overallRating);
 
                 postReadDtos.Add(MapPostToReadDto(post, totalComments, averageStars));

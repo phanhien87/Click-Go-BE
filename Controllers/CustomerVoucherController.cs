@@ -1,9 +1,12 @@
 ﻿using Click_Go.DTOs;
 using Click_Go.Helper;
+using Click_Go.Hubs;
 using Click_Go.Models;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Click_Go.Controllers
 {
@@ -13,16 +16,18 @@ namespace Click_Go.Controllers
     public class CustomerVoucherController : ControllerBase
     {
         private readonly IVoucherService _voucherService;
-
-        public CustomerVoucherController(IVoucherService voucherService)
+        private readonly IHubContext<VoucherHub> _hubContext;
+        public CustomerVoucherController(IVoucherService voucherService, IHubContext<VoucherHub> hubContext)
         {
             _voucherService = voucherService;
+            _hubContext = hubContext;   
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateVoucher([FromBody] VoucherProcessDto dto)
         {
             var created = await _voucherService.CreateVoucherAsync(dto);
+            await _hubContext.Clients.All.SendAsync("VoucherUpdated", new { created.PostId });
             return CreatedAtAction(nameof(GetVoucher), new { id = created.Id }, created);
         }
 
@@ -32,7 +37,7 @@ namespace Click_Go.Controllers
             var updated = await _voucherService.UpdateVoucherAsync(id, dto);
             if (updated == null)
                 return NotFound();
-
+            await _hubContext.Clients.All.SendAsync("VoucherUpdated", new {updated.PostId});
             return Ok(updated);
         }
 
@@ -67,7 +72,8 @@ namespace Click_Go.Controllers
         [HttpPut("{idVoucher}/used-count")]
         public async Task<IActionResult> UpdateUsedCount(long idVoucher, [FromBody] bool action)
         {
-            await _voucherService.UpdateUsedCountAsync(idVoucher, action);
+            var postId = await _voucherService.UpdateUsedCountAsync(idVoucher, action);
+            await _hubContext.Clients.All.SendAsync("VoucherUpdated", new { postId });
             return NoContent();
         }
 

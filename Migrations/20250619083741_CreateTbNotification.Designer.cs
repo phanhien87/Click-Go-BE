@@ -4,6 +4,7 @@ using Click_Go.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Click_Go.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250619083741_CreateTbNotification")]
+    partial class CreateTbNotification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -287,9 +290,6 @@ namespace Click_Go.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<long?>("CommentId")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("CREATED_DATE");
@@ -328,8 +328,6 @@ namespace Click_Go.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
 
                     b.HasIndex("UserId");
 
@@ -582,9 +580,6 @@ namespace Click_Go.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<long?>("CommentId")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("CREATED_DATE");
@@ -616,8 +611,6 @@ namespace Click_Go.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
 
                     b.HasIndex("PostId");
 
@@ -1053,17 +1046,11 @@ namespace Click_Go.Migrations
 
             modelBuilder.Entity("Click_Go.Models.Notification", b =>
                 {
-                    b.HasOne("Click_Go.Models.Comment", "Comment")
-                        .WithMany()
-                        .HasForeignKey("CommentId");
-
                     b.HasOne("Click_Go.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Comment");
 
                     b.Navigation("User");
                 });
@@ -1119,10 +1106,6 @@ namespace Click_Go.Migrations
 
             modelBuilder.Entity("Click_Go.Models.Rating", b =>
                 {
-                    b.HasOne("Click_Go.Models.Comment", "Comment")
-                        .WithMany()
-                        .HasForeignKey("CommentId");
-
                     b.HasOne("Click_Go.Models.Post", "Post")
                         .WithMany("Ratings")
                         .HasForeignKey("PostId");
@@ -1132,8 +1115,6 @@ namespace Click_Go.Migrations
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Comment");
 
                     b.Navigation("Post");
 

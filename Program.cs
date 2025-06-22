@@ -1,7 +1,9 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 using System.Text.Json.Serialization;
 using Click_Go.Data;
 using Click_Go.Helper;
+using Click_Go.Hubs;
 using Click_Go.Middleware;
 using Click_Go.Models;
 using Click_Go.Repositories;
@@ -12,9 +14,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.FileProviders;
-using System.IO;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Click_Go
 {
@@ -48,6 +49,7 @@ namespace Click_Go
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             
 
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -62,6 +64,7 @@ namespace Click_Go
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IVoucherService, VoucherService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
@@ -74,7 +77,7 @@ namespace Click_Go
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();
 
-
+          
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -115,7 +118,12 @@ namespace Click_Go
                 options.ClientSecret = "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";
                 options.CallbackPath = "/signin-google";
             });
-             
+
+            builder.Services.AddSignalR().AddHubOptions<NotificationHub>(options =>
+            {
+                options.EnableDetailedErrors = true;
+            });
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowReactApp",
@@ -154,6 +162,7 @@ namespace Click_Go
 
             app.UseCors("AllowReactApp");
 
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
@@ -161,6 +170,9 @@ namespace Click_Go
             
             app.UseSession();
             app.UseRouting();
+
+            app.MapHub<NotificationHub>("/hubs/notification");
+            app.MapHub<VoucherHub>("/voucherHub");
 
 
             app.UseAuthentication();

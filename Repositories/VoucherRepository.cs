@@ -73,7 +73,7 @@ namespace Click_Go.Repositories
 
         }
 
-        public async Task UpdateUsedCountAsync(long idVoucher, bool action)
+        public async Task<long> UpdateUsedCountAsync(long idVoucher, bool action)
         {
             var vouncher = await _context.Vouchers.FindAsync(idVoucher);
 
@@ -84,8 +84,8 @@ namespace Click_Go.Repositories
             if (vouncher.UsedCount == vouncher.UsageLimit) vouncher.IsActive = false;
             else vouncher.IsActive = true;
 
-
                 await _context.SaveChangesAsync();
+            return vouncher.PostId;
         }
     }
 }

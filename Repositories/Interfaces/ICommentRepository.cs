@@ -12,5 +12,11 @@ namespace Click_Go.Repositories.Interfaces
         Task UpdateAsync(Comment comment);
 
         Task<List<Comment>> getCommentByPost(long postId);
+        Task<List<Comment>> GetCommentsByPostAndParent(long postId, long? parentId);
+        Task<int> GetReplyCount(long? parentId);
+        Task<int> GetTotalCommentByPost(long idPost);
+        Task<(bool Success, bool IsRootComment)> DeleteCommentAsync(long commentId, string userId);
+        Task<Comment> GetCommentByIdAsync(long commentId);
+        Task<List<long>> GetAncestorPathWithCTE(long commentId);
     }
 }

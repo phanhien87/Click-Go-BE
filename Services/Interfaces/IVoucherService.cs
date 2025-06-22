@@ -10,6 +10,6 @@ namespace Click_Go.Services.Interfaces
         Task<Voucher?> GetVoucherByIdAsync(long id);
         Task<Voucher?> GetVoucherByCodeAsync(string code);
         Task<List<AllVouncherDto>> GetAllVoucherByPostIdAsync(long id);
-        Task UpdateUsedCountAsync(long idvoucher, bool action);
+        Task<long> UpdateUsedCountAsync(long idvoucher, bool action);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Click_Go.DTOs;
 using Click_Go.Helper;
 using Click_Go.Models;
+using Click_Go.Repositories;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Services.Interfaces;
 using Humanizer;
@@ -14,6 +15,7 @@ namespace Click_Go.Services
         private readonly ICommentRepository _commentRepo;
         private readonly IImageRepository _imageRepo;
         private readonly UnitOfWork _unitOfWork;
+
         public CommentService(ICommentRepository commentRepo, IImageRepository imageRepo, UnitOfWork unitOfWork)
         {
             _commentRepo = commentRepo;
@@ -21,7 +23,7 @@ namespace Click_Go.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<long?> AddCommentAsync(CommentDto dto, string userId)
+        public async Task<GetReplyByPostDto?> AddCommentAsync(CommentDto dto, string userId)
         {
 
             var comment = new Comment
@@ -77,8 +79,18 @@ namespace Click_Go.Services
                 await Task.WhenAll(tasks); // Chờ tất cả ảnh lưu xong
                 await _imageRepo.AddImagesAsync(images);
             }
-            return comment.Id;
-
+            return new GetReplyByPostDto
+            {
+                CommentId = comment.Id,
+                Content = comment.Content,
+                UserName = comment.User?.UserName,
+                UserId = userId,
+                CreatedDate = comment.CreatedDate,
+                LikeCount = comment.Reactions?.Count(r => r.IsLike == true) ?? 0,
+                UnlikeCount = comment.Reactions?.Count(r => r.IsLike == false) ?? 0,
+                ImagesUrl = comment.Images?.Select(img => img.ImagePath).ToList() ?? new List<string>(),
+                Replies = new List<GetCommentByPostDto>()
+            };
         }
 
         public async Task<List<GetCommentByPostDto>> GetCommentsByPostAsync(long postId, string? currentUserId = null)
@@ -126,10 +138,67 @@ namespace Click_Go.Services
 
             return commentDtos.ToList();
         }
+
+        public async Task<List<GetCommentByPostDto>> GetCommentsByPostAndParentAsync(long postId, long? parentId, string? currentUserId = null)
+        {
+            var comments = await _commentRepo.GetCommentsByPostAndParent(postId, parentId);
+
+            var commentDtos = new List<GetCommentByPostDto>();
+
+            foreach (var c in comments)
+            {
+                var dto = new GetCommentByPostDto
+                {
+                    CommentId = c.Id,
+                    Content = c.Content,
+                    UserName = c.User?.UserName ?? "",
+                    CreatedDate = c.CreatedDate,
+                    UpdateDate = c.UpdatedDate,
+                    ImagesUrl = c.Images?.Select(img => img.ImagePath).ToList() ?? new List<string>(),
+                    IsLike = currentUserId == null ? null : c.Reactions?.FirstOrDefault(r => r.UserId == currentUserId)?.IsLike,
+                    LikeCount = c.Reactions?.Count(r => r.IsLike == true) ?? 0,
+                    UnlikeCount = c.Reactions?.Count(r => r.IsLike == false) ?? 0,
+                    ReplyCount = await _commentRepo.GetReplyCount(c.Id),
+                    UserId = c.UserId
+                };
+
+                commentDtos.Add(dto);
+            }
+
+            return commentDtos;
+        }
+
+        public async Task<(bool Success, bool IsRootComment)> DeleteCommentAsync(long commentId, string userId)
+        {
+            return await _commentRepo.DeleteCommentAsync(commentId, userId);
+        }
+
+        public async Task<CommentAncestorPathResult> GetCommentAncestorPathAsync(long commentId)
+        {
+            try
+            {
+              
+                // Lấy đường dẫn tổ tiên bằng CTE (Common Table Expression)
+                var ancestorPath = await _commentRepo.GetAncestorPathWithCTE(commentId);
+
+                return new CommentAncestorPathResult
+                {
+                    Exists = true,
+                    AncestorPath = ancestorPath,
+                    RootCommentId = ancestorPath.FirstOrDefault(),
+                    Depth = ancestorPath.Count
+                };
+            }
+            catch
+            {
+               
+                throw new AppException("Error getting ancestor path for comment");
+            }
+        }
     }
 
 
 
-      
+
 }
 

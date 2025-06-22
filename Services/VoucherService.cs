@@ -54,9 +54,9 @@ namespace Click_Go.Services
             }).ToList();
         }
 
-        public async Task UpdateUsedCountAsync(long idvoucher, bool action)
+        public async Task<long> UpdateUsedCountAsync(long idvoucher, bool action)
         {
-            await _voucherRepository.UpdateUsedCountAsync(idvoucher, action);
+            return await _voucherRepository.UpdateUsedCountAsync(idvoucher, action);
         }
     }
 }

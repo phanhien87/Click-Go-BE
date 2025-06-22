@@ -172,6 +172,7 @@ namespace Click_Go
             app.UseRouting();
 
             app.MapHub<NotificationHub>("/hubs/notification");
+            app.MapHub<VoucherHub>("/voucherHub");
 
 
             app.UseAuthentication();

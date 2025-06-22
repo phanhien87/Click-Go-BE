@@ -11,6 +11,8 @@ namespace Click_Go.Models
         public Post? Post { get; set; }
 
         public double? Overall { get; set; }
+        public long? CommentId { get; set; }
+        public Comment? Comment { get; set; }
 
         public ICollection<RatingDetail>? RatingDetails { get; set; }
     }

@@ -19,7 +19,7 @@ namespace Click_Go.Services
             _imageRepo = imageRepo;
         }
 
-        public async Task AddReviewAsync(ReviewRequestDto reviewRequestDto,string userId)
+        public async Task<ReviewResponseDto> AddReviewAsync(ReviewRequestDto reviewRequestDto,string userId)
         {
             
             CommentDto commentDto = new CommentDto
@@ -28,15 +28,17 @@ namespace Click_Go.Services
                 Content = reviewRequestDto.Content,
                 Images = reviewRequestDto.Images,
             };
-            await _commentService.AddCommentAsync(commentDto,userId);
+            var comment = await _commentService.AddCommentAsync(commentDto,userId);
+            Rating rating = new Rating();
             if (reviewRequestDto.Ratings.Any())
             {
-                var rating = new Rating
+                 rating = new Rating
                 {
                     PostId = reviewRequestDto.PostId,
                     UserID = userId,
                     CreatedDate = DateTime.Now,
                     Status = 1,
+                    CommentId = comment?.CommentId,
                     Overall = reviewRequestDto.Ratings.Average(x => x.Score),
                     RatingDetails = reviewRequestDto.Ratings.Select(r => new RatingDetail
                     {
@@ -48,7 +50,13 @@ namespace Click_Go.Services
                 };
 
                 await _ratingRepo.AddAsync(rating);
+               
             }
+            return new ReviewResponseDto
+            {
+                NewReview = comment,
+                NewRating = rating.Overall,
+            };
         }
 
         public Task<IEnumerable<GetReviewByPostDto>> GetReviewsByPostAsync(int postId, string userId)

@@ -13,7 +13,7 @@ namespace Click_Go.Repositories.Interfaces
         Task<Voucher?> UpdateAsync(long id, VoucherProcessDto dto);
         Task<Voucher?> GetByIdAsync(long id);
         Task<Voucher?> GetByCodeAsync(string code);
-        Task UpdateUsedCountAsync(long idVoucher, bool action);
+        Task<long> UpdateUsedCountAsync(long idVoucher, bool action);
 
     }
 }

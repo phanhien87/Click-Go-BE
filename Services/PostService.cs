@@ -98,6 +98,8 @@ namespace Click_Go.Services
                 Address = combinedAddress,
                 Description = postDto.Description,
                 Price = postDto.Price,
+                LinkFacebook = postDto.LinkFacebook,
+                LinkGoogleMap = postDto.LinkGoogleMap,
                 CategoryId = postDto.CategoryId,
                 UserId = userId,
                 Images = new List<Image>(),
@@ -245,6 +247,8 @@ namespace Click_Go.Services
                 Address = post.Address,
                 Description = post.Description,
                 Price = post.Price,
+                LinkFacebook = post.LinkFacebook,
+                LinkGoogleMap = post.LinkGoogleMap,
                 CreatedDate = post.CreatedDate,
                 UpdatedDate = post.UpdatedDate,
                 Category = post.Category != null ? new CategoryDto
@@ -280,12 +284,19 @@ namespace Click_Go.Services
                 AverageStars = averageStars
             };
         }
-        public async Task<IEnumerable<PostReadDto>> SearchPostsAsync(PostSearchDto searchDto)
+        public async Task<PaginationDto<PostReadDto>> SearchPostsAsync(PostSearchDto searchDto)
         {
             // Validate search criteria
             if (searchDto == null)
             {
-                return Enumerable.Empty<PostReadDto>();
+                return new PaginationDto<PostReadDto>
+                {
+                    PageNumber = 1,
+                    PageSize = 10,
+                    TotalPages = 0,
+                    TotalItems = 0,
+                    Items = Enumerable.Empty<PostReadDto>()
+                };
             }
 
             bool hasSearchCriteria = 
@@ -299,7 +310,14 @@ namespace Click_Go.Services
 
             if (!hasSearchCriteria)
             {
-                return Enumerable.Empty<PostReadDto>();
+                return new PaginationDto<PostReadDto>
+                {
+                    PageNumber = searchDto.PageNumber,
+                    PageSize = searchDto.PageSize,
+                    TotalPages = 0,
+                    TotalItems = 0,
+                    Items = Enumerable.Empty<PostReadDto>()
+                };
             }
 
             // Clean up tag names if provided
@@ -319,18 +337,68 @@ namespace Click_Go.Services
                 }
             }
 
+            // Ensure valid pagination parameters
+            if (searchDto.PageNumber < 1)
+            {
+                searchDto.PageNumber = 1;
+            }
+
+            if (searchDto.PageSize < 1)
+            {
+                searchDto.PageSize = 10;
+            }
+            else if (searchDto.PageSize > 50) // Limit max page size
+            {
+                searchDto.PageSize = 50;
+            }
+
+            // Get total count of matching posts
+            int totalCount = await _postRepository.CountSearchResultsAsync(searchDto);
+
+            // Calculate total pages
+            int totalPages = (int)Math.Ceiling(totalCount / (double)searchDto.PageSize);
+
+            // If no posts match, return empty result
+            if (totalCount == 0)
+            {
+                return new PaginationDto<PostReadDto>
+                {
+                    PageNumber = searchDto.PageNumber,
+                    PageSize = searchDto.PageSize,
+                    TotalPages = 0,
+                    TotalItems = 0,
+                    Items = Enumerable.Empty<PostReadDto>()
+                };
+            }
+
+            // Check if requested page exceeds total pages
+            if (searchDto.PageNumber > totalPages)
+            {
+                throw new AppException($"Page number {searchDto.PageNumber} exceeds total pages {totalPages}. Valid page range is 1 to {totalPages}.");
+            }
+
+            // Get paginated posts
             var posts = await _postRepository.SearchPostsAsync(searchDto);
 
+            // Map to DTOs
             var postReadDtos = new List<PostReadDto>();
             foreach (var post in posts)
             {
-                //var comments = await _commentService.GetCommentsByPostAsync(post.Id);
                 var overallRating = await _ratingRepository.GetOverallCriteriaByPostId(post.Id);
-                int totalComments =  await _commentRepository.GetTotalCommentByPost(post.Id);
+                int totalComments = await _commentRepository.GetTotalCommentByPost(post.Id);
                 double averageStars = CalculateAverageStars(overallRating);
                 postReadDtos.Add(MapPostToReadDto(post, totalComments, averageStars));
             }
-            return postReadDtos;
+
+            // Create and return pagination result
+            return new PaginationDto<PostReadDto>
+            {
+                PageNumber = searchDto.PageNumber,
+                PageSize = searchDto.PageSize,
+                TotalPages = totalPages,
+                TotalItems = totalCount,
+                Items = postReadDtos
+            };
         }
 
         public async Task<IEnumerable<PostReadDto>> GetAllPostsAsync()
@@ -353,6 +421,162 @@ namespace Click_Go.Services
                 postReadDtos.Add(MapPostToReadDto(post, totalComments, averageStars));
             }
             return postReadDtos;
+        }
+
+        public async Task<Post> UpdatePostAsync(PostUpdateDto postDto, string userId)
+        {
+            // Check if post exists and belongs to the user
+            var post = await _postRepository.GetByIdAsync(postDto.Id);
+            if (post == null)
+            {
+                throw new NotFoundException($"Post with ID {postDto.Id} not found.");
+            }
+
+            if (post.UserId != userId)
+            {
+                throw new AppException("You are not authorized to update this post.");
+            }
+
+            // Update basic properties if provided
+            if (!string.IsNullOrWhiteSpace(postDto.Name))
+                post.Name = postDto.Name;
+
+            if (!string.IsNullOrWhiteSpace(postDto.Title))
+                post.Title = postDto.Title;
+
+            if (!string.IsNullOrWhiteSpace(postDto.SDT))
+                post.SDT = postDto.SDT;
+
+            if (!string.IsNullOrWhiteSpace(postDto.Description))
+                post.Description = postDto.Description;
+
+            if (postDto.Price.HasValue)
+                post.Price = postDto.Price;
+
+            if (!string.IsNullOrWhiteSpace(postDto.LinkFacebook))
+                post.LinkFacebook = postDto.LinkFacebook;
+
+            if (!string.IsNullOrWhiteSpace(postDto.LinkGoogleMap))
+                post.LinkGoogleMap = postDto.LinkGoogleMap;
+
+            // Update address if any address components are provided
+            var addressParts = new List<string?>();
+            bool hasAddressUpdate = false;
+
+            if (!string.IsNullOrWhiteSpace(postDto.Street))
+            {
+                addressParts.Add(postDto.Street.Trim());
+                hasAddressUpdate = true;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(postDto.Ward))
+            {
+                addressParts.Add(postDto.Ward.Trim());
+                hasAddressUpdate = true;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(postDto.District))
+            {
+                addressParts.Add(postDto.District.Trim());
+                hasAddressUpdate = true;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(postDto.City))
+            {
+                addressParts.Add(postDto.City.Trim());
+                hasAddressUpdate = true;
+            }
+
+            if (hasAddressUpdate)
+            {
+                post.Address = string.Join(", ", addressParts.Where(s => !string.IsNullOrEmpty(s)));
+            }
+
+            // Update category if provided
+            if (postDto.CategoryId.HasValue && postDto.CategoryId.Value > 0)
+            {
+                var category = await _postRepository.GetCategoryByIdAsync(postDto.CategoryId.Value);
+                if (category == null)
+                {
+                    throw new NotFoundException("Invalid Category ID.");
+                }
+                post.CategoryId = postDto.CategoryId.Value;
+            }
+
+            // Update tags if provided
+            if (postDto.TagIds != null && postDto.TagIds.Any())
+            {
+                var tags = await _postRepository.GetTagsByIdsAsync(postDto.TagIds);
+                post.Tags = tags;
+            }
+
+            // Handle Logo Image - replace if new one is provided
+            if (postDto.LogoImage != null)
+            {
+                post.Logo_Image = await _saveImageHelper.SaveFileAsync(postDto.LogoImage, "logos");
+            }
+            
+            // Handle Background Image - replace if new one is provided
+            if (postDto.BackgroundImage != null)
+            {
+                post.Background = await _saveImageHelper.SaveFileAsync(postDto.BackgroundImage, "backgrounds");
+            }
+
+            // Handle Other Images - replace all if new ones are provided
+            if (postDto.OtherImages != null && postDto.OtherImages.Any())
+            {
+                // Clear existing images
+                post.Images.Clear();
+                
+                // Add new images
+                foreach (var imageFile in postDto.OtherImages)
+                {
+                    var imagePath = await _saveImageHelper.SaveFileAsync(imageFile, "posts");
+                    post.Images.Add(new Image
+                    {
+                        ImagePath = imagePath,
+                        CommentId = null,
+                        CreatedDate = DateTime.UtcNow,
+                        UpdatedDate = DateTime.UtcNow
+                    });
+                }
+            }
+
+            // Update opening hours if provided
+            if (postDto.OpeningHours != null && postDto.OpeningHours.Any())
+            {
+                // Clear existing opening hours
+                post.Opening_Hours.Clear();
+
+                // Add new opening hours
+                foreach (var ohDto in postDto.OpeningHours)
+                {
+                    if (string.IsNullOrWhiteSpace(ohDto.DayOfWeek) ||
+                        ohDto.OpenHour < 0 || ohDto.OpenHour > 23 || ohDto.OpenMinute < 0 || ohDto.OpenMinute > 59 ||
+                        ohDto.CloseHour < 0 || ohDto.CloseHour > 23 || ohDto.CloseMinute < 0 || ohDto.CloseMinute > 59)
+                    {
+                        continue;
+                    }
+
+                    post.Opening_Hours.Add(new OpeningHour
+                    {
+                        DayOfWeek = ohDto.DayOfWeek,
+                        OpenHour = ohDto.OpenHour,
+                        OpenMinute = ohDto.OpenMinute,
+                        CloseHour = ohDto.CloseHour,
+                        CloseMinute = ohDto.CloseMinute,
+                        CreatedDate = DateTime.UtcNow,
+                        UpdatedDate = DateTime.UtcNow
+                    });
+                }
+            }
+
+            // Update timestamp
+            post.UpdatedDate = DateTime.UtcNow;
+            post.UpdatedUser = Guid.Parse(userId);
+
+            // Save changes
+            return await _postRepository.UpdatePostAsync(post);
         }
 
         public async Task LockPostAsync(string userId, int status)

@@ -1,10 +1,13 @@
-﻿using System.IO;
+
+
+using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
 using Click_Go.Data;
 using Click_Go.Helper;
 using Click_Go.Hubs;
 using Click_Go.Middleware;
+
 using Click_Go.Models;
 using Click_Go.Repositories;
 using Click_Go.Repositories.Interfaces;
@@ -13,9 +16,22 @@ using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Text.Json.Serialization;
+using Click_Go.Helper;
+using Click_Go.Repositories.Interfaces;
+using Click_Go.Repositories;
+using Click_Go.Middleware;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+
+
 
 namespace Click_Go
 {
@@ -46,11 +62,13 @@ namespace Click_Go
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
             builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             
+
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPostService, PostService>();
@@ -59,12 +77,16 @@ namespace Click_Go
             builder.Services.AddScoped<ICommentService, CommentService>();
             builder.Services.AddScoped<IReactService, ReactService>();
             builder.Services.AddScoped<IPackageService, PackageService>();
+
+            builder.Services.AddScoped<IWishlistService, WishlistService>();
+
             builder.Services.AddScoped<IWishlistService, WishlistService>(); 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IVoucherService, VoucherService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+
 
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
@@ -169,6 +191,7 @@ namespace Click_Go
             }
             
             app.UseSession();
+
             app.UseRouting();
 
             app.MapHub<NotificationHub>("/hubs/notification");

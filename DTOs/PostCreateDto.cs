@@ -15,6 +15,8 @@ namespace Click_Go.DTOs
         public string? City { get; set; }
         public string Description { get; set; }
         public double? Price { get; set; }
+        public string? LinkFacebook { get; set; }
+        public string? LinkGoogleMap { get; set; }
         public long CategoryId { get; set; }
         public List<long>? TagIds { get; set; }
         public IFormFile? LogoImage { get; set; } // Single file for logo

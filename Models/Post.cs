@@ -10,6 +10,8 @@
         public string? Address { get; set; }
         public string? Description { get; set; }
         public double? Price { get; set; }
+        public string? LinkFacebook { get; set; }
+        public string? LinkGoogleMap { get; set; }
         public long CategoryId { get; set; }
         public Category Category { get; set; }
 

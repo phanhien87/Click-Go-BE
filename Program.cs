@@ -121,8 +121,9 @@ namespace Click_Go
 
             builder.Services.AddSignalR().AddHubOptions<NotificationHub>(options =>
             {
-                options.EnableDetailedErrors = true;
+                options.EnableDetailedErrors = builder.Environment.IsDevelopment();
             });
+
 
             builder.Services.AddCors(options =>
             {
@@ -167,12 +168,12 @@ namespace Click_Go
             {
                 app.UseHttpsRedirection();
             }
-            
-            app.UseSession();
-            app.UseRouting();
 
-            app.MapHub<NotificationHub>("/hubs/notification");
-            app.MapHub<VoucherHub>("/voucherHub");
+            app.UseRouting();
+            app.UseSession();
+           
+
+           
 
 
             app.UseAuthentication();
@@ -182,9 +183,11 @@ namespace Click_Go
             app.UseMiddleware<BanCheckMiddleware>();
             app.UseMiddleware<UserPackageValidationMiddleware>();
 
-           
+            app.MapHub<NotificationHub>("/hubs/notification");
+            app.MapHub<VoucherHub>("/voucherHub");
 
-          
+
+
             // Cho phép truy cập thư mục UploadedFiles như một static folder
             app.UseStaticFiles(new StaticFileOptions
             {

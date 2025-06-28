@@ -211,5 +211,12 @@ namespace Click_Go.Repositories
         {
             return await _context.Tags.Where(t => tagIds.Contains(t.Id)).ToListAsync();
         }
+
+        public async Task<long?> GetIdPostByUser(string userId)
+        {
+            var post =  await _context.Posts.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (post == null) return null;
+            return post.Id;
+        }
     }
 }

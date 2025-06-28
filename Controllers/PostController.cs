@@ -27,6 +27,13 @@ namespace Click_Go.Controllers
             _postService = postService;
             _logger = logger; 
         }
+        [HttpGet]
+        public async Task<IActionResult> GetPostIdByUser([FromQuery] string userId)
+        {
+            var idPost = await _postService.GetPostIdByUserAsync(userId);
+            if(idPost == null) return NotFound();
+            return Ok(idPost);
+        }
 
         [HttpPost]
         [Consumes("multipart/form-data")]

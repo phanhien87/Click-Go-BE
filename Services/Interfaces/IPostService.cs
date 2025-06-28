@@ -14,5 +14,6 @@ namespace Click_Go.Services.Interfaces
         Task<IEnumerable<PostReadDto>> GetAllPostsAsync();
         Task<Post> UpdatePostAsync(PostUpdateDto postDto, string userId);
         Task LockPostAsync(string userId, int status);
+        Task<long?> GetPostIdByUserAsync(string userId);
     }
 }

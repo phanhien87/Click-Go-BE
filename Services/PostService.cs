@@ -591,5 +591,10 @@ namespace Click_Go.Services
                 await _postRepository.UpdatePostAsync(postsList.ToList());
             }
         }
+
+        public async Task<long?> GetPostIdByUserAsync(string userId)
+        {
+           return await _postRepository.GetIdPostByUser(userId);
+        }
     }
 }

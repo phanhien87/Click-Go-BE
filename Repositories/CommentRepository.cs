@@ -31,19 +31,19 @@ namespace Click_Go.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<(bool Success, bool IsRootComment)> DeleteCommentAsync(long commentId, string userId)
+        public async Task<(bool Success, bool IsRootComment, long? newParentId)> DeleteCommentAsync(long commentId, string userId)
         {
             var comment = await GetCommentByIdAsync(commentId);
 
             if (comment == null)
             {
-                return (false, false);
+                return (false, false, null);
             }
 
             var user = await _context.Users.FindAsync(userId);
             if (comment.UserId != userId)
             {
-                return (false, comment.ParentId == null);
+                return (false, comment.ParentId == null, null);
             }
 
             // Nếu là comment gốc (ParentId == null), xóa tất cả replies
@@ -56,7 +56,24 @@ namespace Click_Go.Repositories
                 _context.CommentReactions.RemoveRange(comment.Reactions);
 
                 _context.Images.RemoveRange(comment.Images);
-                _context.Comments.RemoveRange(comment.Replies);
+
+                var replies = await _context.Comments
+                                                    .Where(c => c.ParentId == commentId)
+                                                    .ToListAsync();
+
+                var childrenCommentIds =  replies.Select(c => c.Id).ToList();
+
+                var childNoti = await _context.Notifications.Where(n => childrenCommentIds.Contains((long)n.CommentId)).ToListAsync();
+                _context.Notifications.RemoveRange(childNoti);
+
+                var childImg = await _context.Images.Where(i => childrenCommentIds.Contains((long)i.CommentId)).ToListAsync();
+                _context.Images.RemoveRange(childImg);
+
+                var childReact = await _context.CommentReactions.Where(r => childrenCommentIds.Contains((long)r.CommentId)).ToListAsync();
+                _context.CommentReactions.RemoveRange(childReact);
+
+                _context.Comments.RemoveRange( await GetAllChildCommentsRecursiveAsync(commentId));
+
                 _context.Comments.Remove(comment);
             }
             else
@@ -92,8 +109,31 @@ namespace Click_Go.Repositories
             }
 
             await _context.SaveChangesAsync();
-            return (true, comment.ParentId == null);
+            return (true, comment.ParentId == null, comment.ParentId);
         }
+
+        private async Task<List<Comment>> GetAllChildCommentsRecursiveAsync(long parentId)
+        {
+            var result = new List<Comment>();
+
+            async Task Traverse(long currentId)
+            {
+                var children = await _context.Comments
+                    .Where(c => c.ParentId == currentId)
+                    .OrderBy(c => c.CreatedDate) 
+                    .ToListAsync();
+
+                foreach (var child in children)
+                {
+                    result.Add(child); 
+                    await Traverse(child.Id);
+                }
+            }
+
+            await Traverse(parentId);
+            return result;
+        }
+
 
         public async Task<List<long>> GetAncestorPathWithCTE(long commentId)
         {

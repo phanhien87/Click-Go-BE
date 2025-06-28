@@ -74,7 +74,7 @@ namespace Click_Go.Controllers
                 await _notificationService.AddAsync(noti);
             }
 
-            await _hubContext.Clients.Group(parentComment.UserId)
+            await _hubContext.Clients.User(parentComment.UserId)
               .SendAsync("ReceiveNotification", new
               {
                   message = noti.Message,
@@ -117,7 +117,7 @@ namespace Click_Go.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            var (success, isRootComment) = await _commentService.DeleteCommentAsync(id, userId);
+            var (success, isRootComment, newParentId) = await _commentService.DeleteCommentAsync(id, userId);
             if (!success)
             {
                 return NotFound("Comment not found or user not authorized to delete.");
@@ -126,7 +126,7 @@ namespace Click_Go.Controllers
             var message = isRootComment
                 ? "Root comment and all its replies deleted successfully."
                 : "Reply deleted successfully.";
-            return Ok(new { Message = message });
+            return Ok(new { Message = message, NewParentID = newParentId});
         }
 
         [HttpGet("{commentId}/ancestor-path")]

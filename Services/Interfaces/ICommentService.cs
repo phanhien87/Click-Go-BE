@@ -12,7 +12,7 @@ namespace Click_Go.Services.Interfaces
 
         Task<Comment> GetParentCmtById(long? id);
         Task<List<GetCommentByPostDto>> GetCommentsByPostAndParentAsync(long postId, long? parentId, string? currentUserId = null);
-        Task<(bool Success, bool IsRootComment)> DeleteCommentAsync(long commentId, string userId);
+        Task<(bool Success, bool IsRootComment,long? newParentId)> DeleteCommentAsync(long commentId, string userId);
         Task<CommentAncestorPathResult> GetCommentAncestorPathAsync(long commentId);
     }
 }

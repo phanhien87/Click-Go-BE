@@ -2,33 +2,32 @@
 
 using System.IO;
 using System.Text;
+using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization;
 using Click_Go.Data;
 using Click_Go.Helper;
+using Click_Go.Helper;
 using Click_Go.Hubs;
 using Click_Go.Middleware;
-
+using Click_Go.Middleware;
 using Click_Go.Models;
 using Click_Go.Repositories;
+using Click_Go.Repositories;
+using Click_Go.Repositories.Interfaces;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Services;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Text.Json.Serialization;
-using Click_Go.Helper;
-using Click_Go.Repositories.Interfaces;
-using Click_Go.Repositories;
-using Click_Go.Middleware;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 
 
@@ -103,6 +102,8 @@ namespace Click_Go
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
             //Add identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
              .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -129,6 +130,24 @@ namespace Click_Go
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
                     ClockSkew = TimeSpan.Zero
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // Nếu request đến Hub thì lấy token từ query string
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            path.StartsWithSegments("/hubs/notification"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+
             })
             .AddFacebook(options =>
             {

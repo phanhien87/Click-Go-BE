@@ -7,11 +7,7 @@ namespace Click_Go.Hubs
         public override async Task OnConnectedAsync()
         {
             var userId = Context.UserIdentifier;
-            if (!string.IsNullOrEmpty(userId))
-            {
-                await Groups.AddToGroupAsync(Context.ConnectionId, userId);
-            }
-
+            Console.WriteLine($"User connected: {userId}");
             await base.OnConnectedAsync();
         }
     }

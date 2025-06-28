@@ -15,7 +15,7 @@ namespace Click_Go.Repositories.Interfaces
         Task<List<Comment>> GetCommentsByPostAndParent(long postId, long? parentId);
         Task<int> GetReplyCount(long? parentId);
         Task<int> GetTotalCommentByPost(long idPost);
-        Task<(bool Success, bool IsRootComment)> DeleteCommentAsync(long commentId, string userId);
+        Task<(bool Success, bool IsRootComment, long? newParentId)> DeleteCommentAsync(long commentId, string userId);
         Task<Comment> GetCommentByIdAsync(long commentId);
         Task<List<long>> GetAncestorPathWithCTE(long commentId);
     }

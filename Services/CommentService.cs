@@ -168,7 +168,7 @@ namespace Click_Go.Services
             return commentDtos;
         }
 
-        public async Task<(bool Success, bool IsRootComment)> DeleteCommentAsync(long commentId, string userId)
+        public async Task<(bool Success, bool IsRootComment, long? newParentId)> DeleteCommentAsync(long commentId, string userId)
         {
             return await _commentRepo.DeleteCommentAsync(commentId, userId);
         }

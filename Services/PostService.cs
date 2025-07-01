@@ -1,4 +1,4 @@
-using Click_Go.Data;
+﻿using Click_Go.Data;
 using Click_Go.DTOs;
 using Click_Go.Models;
 using Click_Go.Helper;
@@ -45,18 +45,18 @@ namespace Click_Go.Services
             var userPackage = await _postRepository.GetUserPackageByUserIdAsync(userId);
             if (userPackage == null)
             {
-                throw new AppException("User does not have an active package. Please subscribe to a package to post.");
+                throw new AppException("Bạn phải mua gói mới có thể đăng bài được!");
             }
 
-            if (userPackage.ExpireDate < DateTime.UtcNow)
-            {
-                throw new AppException("Your package has expired. Please renew your subscription to post.");
-            }
+            //if (userPackage.ExpireDate < DateTime.UtcNow)
+            //{
+            //    throw new AppException("Your package has expired. Please renew your subscription to post.");
+            //}
 
             var existingPosts = await _postRepository.GetByUserIdAsync(userId);
             if (existingPosts.Any())
             {
-                throw new AppException("User already has a post.");
+                throw new AppException("Bạn đã có 1 bài đăng rồi!");
             }
 
             if (string.IsNullOrWhiteSpace(postDto.Name) || postDto.CategoryId <= 0)

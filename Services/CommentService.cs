@@ -13,14 +13,16 @@ namespace Click_Go.Services
     {
 
         private readonly ICommentRepository _commentRepo;
+        private readonly IRatingRepository _ratingRepository;
         private readonly IImageRepository _imageRepo;
         private readonly UnitOfWork _unitOfWork;
 
-        public CommentService(ICommentRepository commentRepo, IImageRepository imageRepo, UnitOfWork unitOfWork)
+        public CommentService(ICommentRepository commentRepo, IImageRepository imageRepo, UnitOfWork unitOfWork, IRatingRepository ratingRepository)
         {
             _commentRepo = commentRepo;
             _imageRepo = imageRepo;
             _unitOfWork = unitOfWork;
+            _ratingRepository = ratingRepository;
         }
 
         public async Task<GetReplyByPostDto?> AddCommentAsync(CommentDto dto, string userId)
@@ -159,7 +161,8 @@ namespace Click_Go.Services
                     LikeCount = c.Reactions?.Count(r => r.IsLike == true) ?? 0,
                     UnlikeCount = c.Reactions?.Count(r => r.IsLike == false) ?? 0,
                     ReplyCount = await _commentRepo.GetReplyCount(c.Id),
-                    UserId = c.UserId
+                    UserId = c.UserId,
+                    overallRating = await _ratingRepository.GetOverallByCmtId(c.Id),
                 };
 
                 commentDtos.Add(dto);

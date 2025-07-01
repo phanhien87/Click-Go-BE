@@ -20,6 +20,13 @@ namespace Click_Go.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<double?> GetOverallByCmtId(long id)
+        {
+           var rt =  await _context.Ratings.FirstOrDefaultAsync(r => r.CommentId == id);
+            if (rt == null) return null;
+            return rt.Overall;
+        }
+
         public async Task<OverallCriteriaDto> GetOverallCriteriaByPostId(long id)
         {
            var details = await _context.RatingDetails.Include(r => r.Rating).Where(p => p.Rating.PostId == id).GroupBy(c =>c.Criteria).Select(g => new

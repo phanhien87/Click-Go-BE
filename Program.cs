@@ -1,20 +1,36 @@
-﻿using System.Text;
+
+
+using System.IO;
+using System.Text;
+using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization;
 using Click_Go.Data;
 using Click_Go.Helper;
+using Click_Go.Helper;
+using Click_Go.Hubs;
+using Click_Go.Middleware;
 using Click_Go.Middleware;
 using Click_Go.Models;
 using Click_Go.Repositories;
+using Click_Go.Repositories;
+using Click_Go.Repositories.Interfaces;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Services;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.FileProviders;
-using System.IO;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
+
+
 
 namespace Click_Go
 {
@@ -45,10 +61,13 @@ namespace Click_Go
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
             builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             
+
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPostService, PostService>();
@@ -57,11 +76,16 @@ namespace Click_Go
             builder.Services.AddScoped<ICommentService, CommentService>();
             builder.Services.AddScoped<IReactService, ReactService>();
             builder.Services.AddScoped<IPackageService, PackageService>();
+
+            builder.Services.AddScoped<IWishlistService, WishlistService>();
+
             builder.Services.AddScoped<IWishlistService, WishlistService>(); 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IVoucherService, VoucherService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+
 
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
@@ -74,9 +98,11 @@ namespace Click_Go
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();
 
-
+          
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 
             //Add identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -104,6 +130,24 @@ namespace Click_Go
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
                     ClockSkew = TimeSpan.Zero
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // Nếu request đến Hub thì lấy token từ query string
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            path.StartsWithSegments("/hubs/notification"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+
             })
             .AddFacebook(options =>
             {
@@ -115,7 +159,13 @@ namespace Click_Go
                 options.ClientSecret = "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";
                 options.CallbackPath = "/signin-google";
             });
-             
+
+            builder.Services.AddSignalR().AddHubOptions<NotificationHub>(options =>
+            {
+                options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+            });
+
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowReactApp",
@@ -154,13 +204,23 @@ namespace Click_Go
 
             app.UseCors("AllowReactApp");
 
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
             }
+
             
             app.UseSession();
+
             app.UseRouting();
+
+
+
+           
+           
+
+           
 
 
             app.UseAuthentication();
@@ -170,9 +230,11 @@ namespace Click_Go
             app.UseMiddleware<BanCheckMiddleware>();
             app.UseMiddleware<UserPackageValidationMiddleware>();
 
-           
+            app.MapHub<NotificationHub>("/hubs/notification");
+            app.MapHub<VoucherHub>("/voucherHub");
 
-          
+
+
             // Cho phép truy cập thư mục UploadedFiles như một static folder
             app.UseStaticFiles(new StaticFileOptions
             {

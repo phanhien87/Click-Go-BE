@@ -5,7 +5,12 @@ namespace Click_Go.DTOs
 {
     public class AllVouncherDto
     {
-      
+
+        public long Id { get; set; }
+
+        public long idVoucher { get; set; }
+        
+
         public string Code { get; set; }
 
         public double DiscountAmount { get; set; }
@@ -23,6 +28,10 @@ namespace Click_Go.DTOs
         public int? UsageLimit { get; set; }
 
         public int? UsedCount { get; set; }
+
+        public long? PostId { get; set; }
+       
+
 
     }
 }

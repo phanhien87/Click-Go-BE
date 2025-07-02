@@ -278,6 +278,64 @@ namespace Click_Go.Migrations
                     b.ToTable("Images");
                 });
 
+            modelBuilder.Entity("Click_Go.Models.Notification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CommentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CREATED_DATE");
+
+                    b.Property<Guid?>("CreatedUser")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CREATED_USER");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("UPDATED_DATE");
+
+                    b.Property<Guid?>("UpdatedUser")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UPDATED_USER");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Click_Go.Models.OpeningHour", b =>
                 {
                     b.Property<long>("Id")
@@ -474,6 +532,12 @@ namespace Click_Go.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("LinkFacebook")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkGoogleMap")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Logo_Image")
                         .HasColumnType("nvarchar(max)");
 
@@ -505,6 +569,9 @@ namespace Click_Go.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int?>("level")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
@@ -523,6 +590,9 @@ namespace Click_Go.Migrations
                         .HasColumnName("ID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CommentId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2")
@@ -555,6 +625,8 @@ namespace Click_Go.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
 
                     b.HasIndex("PostId");
 
@@ -988,6 +1060,23 @@ namespace Click_Go.Migrations
                     b.Navigation("Post");
                 });
 
+            modelBuilder.Entity("Click_Go.Models.Notification", b =>
+                {
+                    b.HasOne("Click_Go.Models.Comment", "Comment")
+                        .WithMany()
+                        .HasForeignKey("CommentId");
+
+                    b.HasOne("Click_Go.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Click_Go.Models.OpeningHour", b =>
                 {
                     b.HasOne("Click_Go.Models.Post", "Post")
@@ -1039,6 +1128,10 @@ namespace Click_Go.Migrations
 
             modelBuilder.Entity("Click_Go.Models.Rating", b =>
                 {
+                    b.HasOne("Click_Go.Models.Comment", "Comment")
+                        .WithMany()
+                        .HasForeignKey("CommentId");
+
                     b.HasOne("Click_Go.Models.Post", "Post")
                         .WithMany("Ratings")
                         .HasForeignKey("PostId");
@@ -1048,6 +1141,8 @@ namespace Click_Go.Migrations
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Comment");
 
                     b.Navigation("Post");
 

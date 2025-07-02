@@ -13,6 +13,8 @@ namespace Click_Go.DTOs
         public string SDT { get; set; }
         public string Address { get; set; }
         public string Description { get; set; }
+        public string LinkFacebook { get; set; }
+        public string LinkGoogleMap { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
 

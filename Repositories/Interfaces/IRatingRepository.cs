@@ -7,5 +7,6 @@ namespace Click_Go.Repositories.Interfaces
     {
         Task AddAsync(Rating rating);
         Task<OverallCriteriaDto> GetOverallCriteriaByPostId(long id);
+        Task<double?> GetOverallByCmtId(long id);
     }
 }

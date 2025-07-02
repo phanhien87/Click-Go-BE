@@ -15,6 +15,7 @@ namespace Click_Go.Models
 
         public long? ParentId { get; set; }
         public Comment? Parent { get; set; }
+      
         public ICollection<Comment>? Replies { get; set; }
 
         public ICollection<CommentReaction>? Reactions { get; set; }

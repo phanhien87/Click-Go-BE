@@ -9,12 +9,15 @@ namespace Click_Go.Repositories.Interfaces
     {
         Task<Post> CreateAsync(Post post);
         Task<Post> GetByIdAsync(long id);
+        Task<long?> GetIdPostByUser(string userId);
         Task<IEnumerable<Post>> GetByUserIdAsync(string userId);
         Task<Category> GetCategoryByIdAsync(long categoryId);
         Task<IEnumerable<Post>> SearchPostsAsync(PostSearchDto searchDto);
+        Task<int> CountSearchResultsAsync(PostSearchDto searchDto);
         Task<IEnumerable<Post>> GetAllAsync();
         Task<UserPackage> GetUserPackageByUserIdAsync(string userId);
-        Task UpdatePostAsync(List<Post> post);
+        Task UpdatePostAsync(List<Post> posts);
+        Task<Post> UpdatePostAsync(Post post);
         Task<int> GetTotalPostAsync(int? status);
         Task<List<Tag>> GetTagsByIdsAsync(List<long> tagIds);
     }

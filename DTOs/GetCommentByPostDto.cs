@@ -7,6 +7,7 @@ namespace Click_Go.DTOs
         public long CommentId { get; set; }
         public string? Content { get; set; }
         public string? UserName { get; set; }
+        public string? UserId { get; set; }
         public string? AvatarUrl { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? UpdateDate { get; set; }
@@ -14,8 +15,9 @@ namespace Click_Go.DTOs
         public bool? IsLike { get; set; } = null; 
         public int LikeCount { get; set; }
         public int UnlikeCount { get; set; }
+        public double? overallRating { get; set; }
         public List<GetCommentByPostDto> Replies { get; set; } = new();
-       
+        public int? ReplyCount { get; set; }
 
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Click_Go.DTOs;
 using Click_Go.Models; 
 using Click_Go.Services.Interfaces;
+using Click_Go.Helper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,13 @@ namespace Click_Go.Controllers
         {
             _postService = postService;
             _logger = logger; 
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetPostIdByUser([FromQuery] string userId)
+        {
+            var idPost = await _postService.GetPostIdByUserAsync(userId);
+            if(idPost == null) return NotFound();
+            return Ok(idPost);
         }
 
         [HttpPost]
@@ -64,9 +72,17 @@ namespace Click_Go.Controllers
         public async Task<IActionResult> GetPostById(long id)
         {
             _logger.LogInformation("Attempting to retrieve post with ID: {PostId}", id);
-            var getPostDto = await _postService.GetPostByIdAsync(id);
-            _logger.LogInformation("Successfully retrieved post with ID: {PostId}", id);
-            return Ok(getPostDto);
+            try
+            {
+                var getPostDto = await _postService.GetPostByIdAsync(id);
+                _logger.LogInformation("Successfully retrieved post with ID: {PostId}", id);
+                return Ok(getPostDto);
+            }
+            catch (NotFoundException ex)
+            {
+                _logger.LogWarning("Post not found: {Message}", ex.Message);
+                return NotFound(new ProblemDetails { Title = "Not Found", Detail = ex.Message });
+            }
         }
 
         [HttpGet("MyPosts")] // Get current user's posts
@@ -89,78 +105,180 @@ namespace Click_Go.Controllers
             return Ok(postsWithDetails);
         }
 
-        [HttpGet("search")] // Changed route from search/address
+        [HttpGet("search")] 
         [AllowAnonymous]
-        [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginationDto<PostReadDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SearchPosts([FromQuery] PostSearchDto searchDto)
         {
-            // Validate that at least one search parameter is provided
-            if (searchDto == null)
+            try
             {
-                return BadRequest(new ProblemDetails 
-                { 
-                    Title = "Bad Request", 
-                    Detail = "Search criteria cannot be null."
-                });
+                // Validate that at least one search parameter is provided
+                if (searchDto == null)
+                {
+                    return BadRequest(new ProblemDetails 
+                    { 
+                        Title = "Bad Request", 
+                        Detail = "Search criteria cannot be null."
+                    });
+                }
+
+                bool hasSearchCriteria = 
+                    !string.IsNullOrWhiteSpace(searchDto.PostName) ||
+                    !string.IsNullOrWhiteSpace(searchDto.District) || 
+                    !string.IsNullOrWhiteSpace(searchDto.Ward) || 
+                    !string.IsNullOrWhiteSpace(searchDto.City) ||
+                    (searchDto.TagNames != null && searchDto.TagNames.Any(t => !string.IsNullOrWhiteSpace(t))) ||
+                    searchDto.MinPrice.HasValue ||
+                    searchDto.MaxPrice.HasValue;
+
+                if (!hasSearchCriteria)
+                {
+                    return BadRequest(new ProblemDetails 
+                    { 
+                        Title = "Bad Request", 
+                        Detail = "At least one search parameter must be provided."
+                    });
+                }
+
+                // Validate price range if both min and max are provided
+                if (searchDto.MinPrice.HasValue && searchDto.MaxPrice.HasValue && 
+                    searchDto.MinPrice.Value > searchDto.MaxPrice.Value)
+                {
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "Bad Request",
+                        Detail = "Minimum price cannot be greater than maximum price."
+                    });
+                }
+
+                // Validate pagination parameters
+                if (searchDto.PageNumber < 1)
+                {
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "Bad Request",
+                        Detail = "Page number must be greater than or equal to 1."
+                    });
+                }
+
+                if (searchDto.PageSize < 1)
+                {
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "Bad Request",
+                        Detail = "Page size must be greater than or equal to 1."
+                    });
+                }
+
+                _logger.LogInformation("Attempting to search posts with criteria: {@SearchCriteria}", searchDto);
+                
+                var result = await _postService.SearchPostsAsync(searchDto);
+                
+                if (result.TotalItems == 0)
+                {
+                    return NotFound(new ProblemDetails 
+                    { 
+                        Title = "Not Found", 
+                        Detail = "No posts matched your search criteria or no active posts were found." 
+                    });
+                }
+
+                return Ok(result);
             }
-
-            bool hasSearchCriteria = 
-                !string.IsNullOrWhiteSpace(searchDto.PostName) ||
-                !string.IsNullOrWhiteSpace(searchDto.District) || 
-                !string.IsNullOrWhiteSpace(searchDto.Ward) || 
-                !string.IsNullOrWhiteSpace(searchDto.City) ||
-                (searchDto.TagNames != null && searchDto.TagNames.Any(t => !string.IsNullOrWhiteSpace(t))) ||
-                searchDto.MinPrice.HasValue ||
-                searchDto.MaxPrice.HasValue;
-
-            if (!hasSearchCriteria)
+            catch (AppException ex) when (ex.Message.Contains("Page number") && ex.Message.Contains("exceeds total pages"))
             {
-                return BadRequest(new ProblemDetails 
-                { 
-                    Title = "Bad Request", 
-                    Detail = "At least one search parameter must be provided."
-                });
-            }
-
-            // Validate price range if both min and max are provided
-            if (searchDto.MinPrice.HasValue && searchDto.MaxPrice.HasValue && 
-                searchDto.MinPrice.Value > searchDto.MaxPrice.Value)
-            {
+                _logger.LogWarning("Invalid pagination request: {Message}", ex.Message);
                 return BadRequest(new ProblemDetails
                 {
-                    Title = "Bad Request",
-                    Detail = "Minimum price cannot be greater than maximum price."
+                    Title = "Invalid Page Number",
+                    Detail = ex.Message
                 });
             }
-
-            _logger.LogInformation("Attempting to search posts with criteria: {@SearchCriteria}", searchDto);
-            
-            var result = await _postService.SearchPostsAsync(searchDto);
-            
-            if (result == null || !result.Any())
+            catch (Exception ex)
             {
-                return NotFound(new ProblemDetails 
-                { 
-                    Title = "Not Found", 
-                    Detail = "No posts matched your search criteria." 
-                });
+                _logger.LogError(ex, "Error searching posts");
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new ProblemDetails
+                    {
+                        Title = "Internal Server Error",
+                        Detail = "An error occurred while processing your request."
+                    });
             }
-
-            return Ok(result);
         }
 
         [HttpGet("GetAllPosts")]
         [AllowAnonymous] // Allow public access to view all posts
         [ProducesResponseType(typeof(IEnumerable<PostReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllPosts()
         {
-            _logger.LogInformation("Retrieving all posts");
+            _logger.LogInformation("Retrieving all active posts");
             var posts = await _postService.GetAllPostsAsync();
+            
+            if (posts == null || !posts.Any())
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Not Found",
+                    Detail = "No active posts were found."
+                });
+            }
+            
             return Ok(posts);
+        }
+
+        [HttpPut]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(PostReadDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdatePost([FromForm] PostUpdateDto postDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("UpdatePost attempt failed: User ID not found in token.");
+                return Unauthorized(new ProblemDetails { Title = "Unauthorized", Detail = "User ID not found in token." });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("UpdatePost validation failed: {ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var updatedPost = await _postService.UpdatePostAsync(postDto, userId);
+                var postReadDto = MapPostToReadDto(updatedPost);
+
+                _logger.LogInformation("Post updated successfully with ID: {PostId}", postReadDto.Id);
+                return Ok(postReadDto);
+            }
+            catch (NotFoundException ex)
+            {
+                _logger.LogWarning("UpdatePost not found: {Message}", ex.Message);
+                return NotFound(new ProblemDetails { Title = "Not Found", Detail = ex.Message });
+            }
+            catch (AppException ex)
+            {
+                _logger.LogWarning("UpdatePost forbidden: {Message}", ex.Message);
+                return StatusCode(StatusCodes.Status403Forbidden, 
+                    new ProblemDetails { Title = "Forbidden", Detail = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating post");
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new ProblemDetails { Title = "Internal Server Error", Detail = "An error occurred while updating the post." });
+            }
         }
 
         // --- Helper Method for Mapping --- 
@@ -178,6 +296,8 @@ namespace Click_Go.Controllers
                 Address = post.Address,
                 Description = post.Description,
                 Price = post.Price,
+                LinkFacebook = post.LinkFacebook,
+                LinkGoogleMap = post.LinkGoogleMap,
                 CreatedDate = post.CreatedDate,
                 UpdatedDate = post.UpdatedDate,
                 Category = post.Category != null ? new CategoryDto

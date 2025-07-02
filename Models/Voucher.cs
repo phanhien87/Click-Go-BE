@@ -5,6 +5,7 @@ namespace Click_Go.Models
     public class Voucher : BaseEntity
     {
       
+       
         [Required]
         [MaxLength(50)]
         public string Code { get; set; }

@@ -41,6 +41,10 @@ namespace Click_Go.Services
 
             return voucherList.Select(voucher => new AllVouncherDto
             {
+                
+
+                Id = voucher.Id,
+                idVoucher = voucher.Id,
                 Code = voucher.Code,
                 DiscountAmount = voucher.DiscountAmount,
                 DiscountPercentage = voucher.DiscountPercentage,
@@ -49,13 +53,14 @@ namespace Click_Go.Services
                 EndDate = voucher.EndDate,
                 IsActive = voucher.IsActive,
                 UsageLimit = voucher.UsageLimit,
-                UsedCount = voucher.UsedCount
+                UsedCount = voucher.UsedCount,
+                PostId = voucher.PostId
             }).ToList();
         }
 
-        public async Task UpdateUsedCountAsync(long idvoucher, bool action)
+        public async Task<long> UpdateUsedCountAsync(long idvoucher, bool action)
         {
-            await _voucherRepository.UpdateUsedCountAsync(idvoucher, action);
+            return await _voucherRepository.UpdateUsedCountAsync(idvoucher, action);
         }
     }
 }

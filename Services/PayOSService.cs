@@ -45,21 +45,13 @@ public class PayOSService
             Message = "Bạn đang dùng 1 gói rồi !"
         }
         ;
-        //bổ sung hàm để kt order nào chưa thanh toán
+       
         PaymentData paymentData;
 
         var package = await _packageRepository.GetPackageByIdAsync(packageId);
         var amountStr = package.Price.ToString();
         var amount = int.Parse(amountStr);
-        //var existedOrder = await _orderRepository.GetOrderListByUserIdAndPackageId(userId, packageId);
-        //if(existedOrder != null && existedOrder.Status == 0)
-        //{
-        //    long orderCode = long.Parse(existedOrder.OrderCode);
-        //    paymentData = new PaymentData(orderCode, amount, package.Name, null
-        //     , cancelUrl, returnUrl);
-        //}
-        //else
-        //{
+     
             var orderCode = await GenerateUniqueOrderCodeAsync();
             var order = new Order
             {
@@ -75,7 +67,6 @@ public class PayOSService
             await _orderRepository.AddAsync(order);
             paymentData = new PaymentData(orderCode, amount, package.Name, null
              , cancelUrl, returnUrl);
-       // }
        
 
        

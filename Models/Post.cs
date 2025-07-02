@@ -12,6 +12,7 @@
         public double? Price { get; set; }
         public string? LinkFacebook { get; set; }
         public string? LinkGoogleMap { get; set; }
+        public int? level {get; set; }
         public long CategoryId { get; set; }
         public Category Category { get; set; }
 

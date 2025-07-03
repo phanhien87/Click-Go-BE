@@ -14,11 +14,15 @@ namespace Click_Go.Controllers
         private readonly IAuthService _authService;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        public AuthController(IAuthService authService, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+        private readonly IConfiguration _configuration;
+
+        public AuthController(IAuthService authService, SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager, IConfiguration configuration)
         {
             _authService = authService;
             _signInManager = signInManager;
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -57,7 +61,7 @@ namespace Click_Go.Controllers
         [HttpGet("external-login-callback")]
         public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
         {
-            string frontendUrl = "http://localhost:3000"; // URL frontend của bạn
+            string frontendUrl = _configuration["FrontendUrl"] ?? "https://clickgo.dev";
 
             if (remoteError != null)
                 return Redirect($"{frontendUrl}/login?error={remoteError}");
@@ -66,7 +70,9 @@ namespace Click_Go.Controllers
             if (info == null)
                 return Redirect($"{frontendUrl}/login?error=Không thể lấy thông tin đăng nhập");
 
-            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
+            var signInResult =
+                await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey,
+                    isPersistent: false);
 
             if (signInResult.Succeeded)
             {
@@ -92,6 +98,7 @@ namespace Click_Go.Controllers
                         var token = await _authService.GenerateJwtTokenAsync(existingUser);
                         return Redirect($"{frontendUrl}/login?token={token}");
                     }
+
                     return Redirect($"{frontendUrl}/login?error=Liên kết tài khoản thất bại");
                 }
                 else
@@ -118,10 +125,8 @@ namespace Click_Go.Controllers
                         // TODO: xử lý lỗi tạo user
                         return Redirect($"{frontendUrl}/login?error=Tạo tài khoản thất bại");
                     }
-                   
                 }
             }
         }
-
     }
 }

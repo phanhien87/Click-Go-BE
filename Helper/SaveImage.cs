@@ -19,7 +19,7 @@ namespace Click_Go.Helper
             }
 
             // Use ContentRootPath instead of WebRootPath
-            var baseFolder = Path.Combine(_webHostEnvironment.ContentRootPath, "UploadedFiles");
+            var baseFolder = Path.Combine(_webHostEnvironment.ContentRootPath, "data", "UploadedFiles");
             var specificUploadsFolder = Path.Combine(baseFolder, subfolder);
 
             if (!Directory.Exists(specificUploadsFolder))
@@ -35,8 +35,8 @@ namespace Click_Go.Helper
                 await file.CopyToAsync(stream);
             }
 
-            // Return the relative path starting from "UploadedFiles"
-            return Path.Combine("UploadedFiles", subfolder, uniqueFileName).Replace("\\", "/");
+            // Return the relative path starting from "/data/UploadedFiles"
+            return Path.Combine("/data/UploadedFiles", subfolder, uniqueFileName).Replace("\\", "/");
         }
     }
 }

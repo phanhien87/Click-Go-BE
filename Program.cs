@@ -169,7 +169,9 @@ namespace Click_Go
             {
                 options.AddPolicy("AllowReactApp",
                     builder => builder
-                        .WithOrigins("http://clickgo_frontend:3001", "https://clickgo.dev")  // Chỉ cho phép frontend này gọi
+                        .WithOrigins("http://clickgo_frontend:3000",
+                                     "https://clickgo.dev",
+                                     "http://localhost:3001")  // Chỉ cho phép frontend này gọi
                         .AllowAnyMethod()                      // Cho phép mọi method (GET, POST, PUT, DELETE, ...)
                         .AllowAnyHeader()                // Cho phép mọi header (ví dụ Authorization)
                         .AllowCredentials()                 // nếu dùng cookies/token

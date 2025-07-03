@@ -219,7 +219,7 @@ namespace Click_Go
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(
-                    Path.Combine(builder.Environment.ContentRootPath, "UploadedFiles")),
+                    Path.Combine(builder.Environment.ContentRootPath, "data", "UploadedFiles")),
                 RequestPath = "/data/UploadedFiles"
             });
 

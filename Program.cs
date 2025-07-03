@@ -154,9 +154,9 @@ namespace Click_Go
                 options.AppSecret = builder.Configuration["Facebook:AppSecret"];
             }).AddGoogle(options =>
             {
-                options.ClientId = builder.configuration["Google:ClientId"];
-                options.ClientSecret = builder.configuration["Google:ClientSecret"];
-                options.CallbackPath = builder.configuration["Google:CallbackPath"];
+                options.ClientId = builder.Configuration["Google:ClientId"];
+                options.ClientSecret = builder.Configuration["Google:ClientSecret"];
+                options.CallbackPath = builder.Configuration["Google:CallbackPath"];
             });
 
             builder.Services.AddSignalR().AddHubOptions<NotificationHub>(options =>

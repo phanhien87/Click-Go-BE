@@ -1,6 +1,5 @@
 ﻿using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Click_Go.Controllers

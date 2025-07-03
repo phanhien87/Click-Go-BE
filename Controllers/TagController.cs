@@ -1,12 +1,7 @@
 using Click_Go.DTOs;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Click_Go.Controllers
 {
@@ -46,7 +41,8 @@ namespace Click_Go.Controllers
 
             if (result == null || !result.Any())
             {
-                return NotFound(new ProblemDetails { Title = "Not Found", Detail = "No tags matched your search criteria." });
+                return NotFound(new ProblemDetails
+                    { Title = "Not Found", Detail = "No tags matched your search criteria." });
             }
 
             return Ok(result);
@@ -76,7 +72,8 @@ namespace Click_Go.Controllers
             {
                 return NotFound(new ProblemDetails { Title = "Not Found", Detail = $"Tag with ID {id} not found." });
             }
+
             return Ok(tag);
         }
     }
-} 
+}

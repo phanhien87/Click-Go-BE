@@ -1,12 +1,10 @@
 ﻿using Click_Go.DTOs;
 using Click_Go.Helper;
 using Click_Go.Hubs;
-using Click_Go.Models;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Click_Go.Controllers
 {
@@ -17,10 +15,11 @@ namespace Click_Go.Controllers
     {
         private readonly IVoucherService _voucherService;
         private readonly IHubContext<VoucherHub> _hubContext;
+
         public CustomerVoucherController(IVoucherService voucherService, IHubContext<VoucherHub> hubContext)
         {
             _voucherService = voucherService;
-            _hubContext = hubContext;   
+            _hubContext = hubContext;
         }
 
         [HttpPost]
@@ -37,7 +36,7 @@ namespace Click_Go.Controllers
             var updated = await _voucherService.UpdateVoucherAsync(id, dto);
             if (updated == null)
                 return NotFound();
-            await _hubContext.Clients.All.SendAsync("VoucherUpdated", new {updated.PostId});
+            await _hubContext.Clients.All.SendAsync("VoucherUpdated", new { updated.PostId });
             return Ok(updated);
         }
 
@@ -50,7 +49,7 @@ namespace Click_Go.Controllers
 
             return Ok(voucher);
         }
-        
+
         [HttpGet("GetByCode/{code}")]
         public async Task<IActionResult> GetVoucherByCode(string code)
         {
@@ -76,6 +75,5 @@ namespace Click_Go.Controllers
             await _hubContext.Clients.All.SendAsync("VoucherUpdated", new { postId });
             return NoContent();
         }
-
     }
 }

@@ -1,22 +1,16 @@
 ﻿using Click_Go.DTOs;
-using Click_Go.Models; 
+using Click_Go.Models;
 using Click_Go.Services.Interfaces;
 using Click_Go.Helper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging; 
-using System;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Collections.Generic; 
 
 namespace Click_Go.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = nameof(Enum.Application_Role.CUSTOMER))] 
+    [Authorize(Roles = nameof(Enum.Application_Role.CUSTOMER))]
     public class PostController : ControllerBase
     {
         private readonly IPostService _postService;
@@ -25,13 +19,14 @@ namespace Click_Go.Controllers
         public PostController(IPostService postService, ILogger<PostController> logger)
         {
             _postService = postService;
-            _logger = logger; 
+            _logger = logger;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetPostIdByUser([FromQuery] string userId)
         {
             var idPost = await _postService.GetPostIdByUserAsync(userId);
-            if(idPost == null) return NotFound();
+            if (idPost == null) return NotFound();
             return Ok(idPost);
         }
 
@@ -41,7 +36,7 @@ namespace Click_Go.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] 
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreatePost([FromForm] PostCreateDto postDto)
         {
@@ -49,7 +44,8 @@ namespace Click_Go.Controllers
             if (string.IsNullOrEmpty(userId))
             {
                 _logger.LogWarning("CreatePost attempt failed: User ID not found in token.");
-                return Unauthorized(new ProblemDetails { Title = "Unauthorized", Detail = "User ID not found in token." });
+                return Unauthorized(new ProblemDetails
+                    { Title = "Unauthorized", Detail = "User ID not found in token." });
             }
 
             if (!ModelState.IsValid)
@@ -65,10 +61,10 @@ namespace Click_Go.Controllers
             return CreatedAtAction(nameof(GetPostById), new { id = postReadDto.Id }, postReadDto);
         }
 
-        [HttpGet("{id}")]//GetPostByPostID
+        [HttpGet("{id}")] //GetPostByPostID
         [ProducesResponseType(typeof(PostReadDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] 
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)] 
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPostById(long id)
         {
             _logger.LogInformation("Attempting to retrieve post with ID: {PostId}", id);
@@ -96,7 +92,8 @@ namespace Click_Go.Controllers
             if (string.IsNullOrEmpty(userId))
             {
                 _logger.LogWarning("GetMyPosts attempt failed: User ID not found in token.");
-                return Unauthorized(new ProblemDetails { Title = "Unauthorized", Detail = "User ID not found in token." });
+                return Unauthorized(new ProblemDetails
+                    { Title = "Unauthorized", Detail = "User ID not found in token." });
             }
 
             var postsWithDetails = await _postService.GetPostsByUserIdAsync(userId);
@@ -105,7 +102,7 @@ namespace Click_Go.Controllers
             return Ok(postsWithDetails);
         }
 
-        [HttpGet("search")] 
+        [HttpGet("search")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(PaginationDto<PostReadDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -118,17 +115,17 @@ namespace Click_Go.Controllers
                 // Validate that at least one search parameter is provided
                 if (searchDto == null)
                 {
-                    return BadRequest(new ProblemDetails 
-                    { 
-                        Title = "Bad Request", 
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "Bad Request",
                         Detail = "Search criteria cannot be null."
                     });
                 }
 
-                bool hasSearchCriteria = 
+                bool hasSearchCriteria =
                     !string.IsNullOrWhiteSpace(searchDto.PostName) ||
-                    !string.IsNullOrWhiteSpace(searchDto.District) || 
-                    !string.IsNullOrWhiteSpace(searchDto.Ward) || 
+                    !string.IsNullOrWhiteSpace(searchDto.District) ||
+                    !string.IsNullOrWhiteSpace(searchDto.Ward) ||
                     !string.IsNullOrWhiteSpace(searchDto.City) ||
                     (searchDto.TagNames != null && searchDto.TagNames.Any(t => !string.IsNullOrWhiteSpace(t))) ||
                     searchDto.MinPrice.HasValue ||
@@ -136,15 +133,15 @@ namespace Click_Go.Controllers
 
                 if (!hasSearchCriteria)
                 {
-                    return BadRequest(new ProblemDetails 
-                    { 
-                        Title = "Bad Request", 
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "Bad Request",
                         Detail = "At least one search parameter must be provided."
                     });
                 }
 
                 // Validate price range if both min and max are provided
-                if (searchDto.MinPrice.HasValue && searchDto.MaxPrice.HasValue && 
+                if (searchDto.MinPrice.HasValue && searchDto.MaxPrice.HasValue &&
                     searchDto.MinPrice.Value > searchDto.MaxPrice.Value)
                 {
                     return BadRequest(new ProblemDetails
@@ -174,21 +171,22 @@ namespace Click_Go.Controllers
                 }
 
                 _logger.LogInformation("Attempting to search posts with criteria: {@SearchCriteria}", searchDto);
-                
+
                 var result = await _postService.SearchPostsAsync(searchDto);
-                
+
                 if (result.TotalItems == 0)
                 {
-                    return NotFound(new ProblemDetails 
-                    { 
-                        Title = "Not Found", 
-                        Detail = "No posts matched your search criteria or no active posts were found." 
+                    return NotFound(new ProblemDetails
+                    {
+                        Title = "Not Found",
+                        Detail = "No posts matched your search criteria or no active posts were found."
                     });
                 }
 
                 return Ok(result);
             }
-            catch (AppException ex) when (ex.Message.Contains("Page number") && ex.Message.Contains("exceeds total pages"))
+            catch (AppException ex) when (ex.Message.Contains("Page number") &&
+                                          ex.Message.Contains("exceeds total pages"))
             {
                 _logger.LogWarning("Invalid pagination request: {Message}", ex.Message);
                 return BadRequest(new ProblemDetails
@@ -200,7 +198,7 @@ namespace Click_Go.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching posts");
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     new ProblemDetails
                     {
                         Title = "Internal Server Error",
@@ -218,7 +216,7 @@ namespace Click_Go.Controllers
         {
             _logger.LogInformation("Retrieving all active posts");
             var posts = await _postService.GetAllPostsAsync();
-            
+
             if (posts == null || !posts.Any())
             {
                 return NotFound(new ProblemDetails
@@ -227,7 +225,7 @@ namespace Click_Go.Controllers
                     Detail = "No active posts were found."
                 });
             }
-            
+
             return Ok(posts);
         }
 
@@ -245,7 +243,8 @@ namespace Click_Go.Controllers
             if (string.IsNullOrEmpty(userId))
             {
                 _logger.LogWarning("UpdatePost attempt failed: User ID not found in token.");
-                return Unauthorized(new ProblemDetails { Title = "Unauthorized", Detail = "User ID not found in token." });
+                return Unauthorized(new ProblemDetails
+                    { Title = "Unauthorized", Detail = "User ID not found in token." });
             }
 
             if (!ModelState.IsValid)
@@ -270,14 +269,15 @@ namespace Click_Go.Controllers
             catch (AppException ex)
             {
                 _logger.LogWarning("UpdatePost forbidden: {Message}", ex.Message);
-                return StatusCode(StatusCodes.Status403Forbidden, 
+                return StatusCode(StatusCodes.Status403Forbidden,
                     new ProblemDetails { Title = "Forbidden", Detail = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating post");
-                return StatusCode(StatusCodes.Status500InternalServerError, 
-                    new ProblemDetails { Title = "Internal Server Error", Detail = "An error occurred while updating the post." });
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ProblemDetails
+                        { Title = "Internal Server Error", Detail = "An error occurred while updating the post." });
             }
         }
 
@@ -300,17 +300,21 @@ namespace Click_Go.Controllers
                 LinkGoogleMap = post.LinkGoogleMap,
                 CreatedDate = post.CreatedDate,
                 UpdatedDate = post.UpdatedDate,
-                Category = post.Category != null ? new CategoryDto
-                {
-                    Id = post.Category.Id,
-                    Name = post.Category.Name
-                } : null,
-                User = post.User != null ? new UserDto
-                {
-                    Id = post.User.Id,
-                    UserName = post.User.UserName,
-                    FullName = post.User.FullName
-                } : null,
+                Category = post.Category != null
+                    ? new CategoryDto
+                    {
+                        Id = post.Category.Id,
+                        Name = post.Category.Name
+                    }
+                    : null,
+                User = post.User != null
+                    ? new UserDto
+                    {
+                        Id = post.User.Id,
+                        UserName = post.User.UserName,
+                        FullName = post.User.FullName
+                    }
+                    : null,
                 OpeningHours = post.Opening_Hours?.Select(oh => new OpeningHourDto
                 {
                     DayOfWeek = oh.DayOfWeek,

@@ -1,31 +1,20 @@
-using System.IO;
 using System.Text;
-using System.Text;
-using System.Text.Json.Serialization;
 using System.Text.Json.Serialization;
 using Click_Go.Data;
 using Click_Go.Helper;
-using Click_Go.Helper;
 using Click_Go.Hubs;
-using Click_Go.Middleware;
 using Click_Go.Middleware;
 using Click_Go.Models;
 using Click_Go.Repositories;
-using Click_Go.Repositories;
-using Click_Go.Repositories.Interfaces;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Services;
 using Click_Go.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Click_Go
@@ -200,6 +189,11 @@ namespace Click_Go
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedProto,
+            });
             
             app.UseCors("AllowReactApp");
 
@@ -210,11 +204,11 @@ namespace Click_Go
 
             app.UseSession();
 
-            app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-            
+
+            app.UseRouting();
+
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<BanCheckMiddleware>();
             app.UseMiddleware<UserPackageValidationMiddleware>();

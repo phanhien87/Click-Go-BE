@@ -1,14 +1,9 @@
-﻿using System.ComponentModel.Design;
-using System.Net.WebSockets;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Click_Go.DTOs;
 using Click_Go.Hubs;
 using Click_Go.Models;
-using Click_Go.Services;
 using Click_Go.Services.Interfaces;
-using Humanizer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -23,7 +18,10 @@ namespace Click_Go.Controllers
         private readonly IReactService _reactService;
         private readonly INotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public CommentController(ICommentService commentService, IReviewService reviewService, IReactService reactService, INotificationService notificationService, IHubContext<NotificationHub> hubContext)
+
+        public CommentController(ICommentService commentService, IReviewService reviewService,
+            IReactService reactService, INotificationService notificationService,
+            IHubContext<NotificationHub> hubContext)
         {
             _commentService = commentService;
             _reviewService = reviewService;
@@ -59,7 +57,6 @@ namespace Click_Go.Controllers
             var parentComment = await _commentService.GetParentCmtById(commentDto.ParentId);
             if (parentComment != null && parentComment.UserId != userId)
             {
-
                 noti = new Notification
                 {
                     UserId = parentComment.UserId,
@@ -75,11 +72,11 @@ namespace Click_Go.Controllers
             }
 
             await _hubContext.Clients.User(parentComment.UserId)
-              .SendAsync("ReceiveNotification", new
-              {
-                  message = noti.Message,
-                  url = noti.Url
-              });
+                .SendAsync("ReceiveNotification", new
+                {
+                    message = noti.Message,
+                    url = noti.Url
+                });
 
             return Ok(comment);
         }
@@ -99,8 +96,8 @@ namespace Click_Go.Controllers
         [HttpGet]
         [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> GetComments(
-                                                    [FromQuery] long postId,
-                                                    [FromQuery] long? parentId)
+            [FromQuery] long postId,
+            [FromQuery] long? parentId)
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var comments = await _commentService.GetCommentsByPostAndParentAsync(postId, parentId, userId);
@@ -126,14 +123,13 @@ namespace Click_Go.Controllers
             var message = isRootComment
                 ? "Root comment and all its replies deleted successfully."
                 : "Reply deleted successfully.";
-            return Ok(new { Message = message, NewParentID = newParentId});
+            return Ok(new { Message = message, NewParentID = newParentId });
         }
 
         [HttpGet("{commentId}/ancestor-path")]
         [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> GetCommentAncestorPath(long commentId)
         {
-
             var result = await _commentService.GetCommentAncestorPathAsync(commentId);
 
             if (!result.Exists)
@@ -153,7 +149,5 @@ namespace Click_Go.Controllers
                 depth = result.Depth
             });
         }
-
     }
 }
-

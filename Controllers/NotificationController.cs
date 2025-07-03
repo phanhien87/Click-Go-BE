@@ -1,8 +1,6 @@
 ﻿using System.Security.Claims;
 using Click_Go.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Click_Go.Controllers
 {
@@ -32,7 +30,7 @@ namespace Click_Go.Controllers
             if (notif == null) return NotFound();
             notif.IsRead = true;
             await _notificationService.UpdateAsync(notif);
-            
+
             return Ok();
         }
     }

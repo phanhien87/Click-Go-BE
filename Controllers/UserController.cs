@@ -1,13 +1,7 @@
-﻿using System.Net.WebSockets;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Click_Go.Data;
-using Click_Go.DTOs;
+﻿using Click_Go.Data;
 using Click_Go.Models;
 using Click_Go.Services.Interfaces;
-using Humanizer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,13 +13,13 @@ namespace Click_Go.Controllers
     public class UserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPostService _postService;
         private readonly IUserService _userService;
-        public UserController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IPostService postService, IUserService userService)
+
+        public UserController(ApplicationDbContext context,
+            IPostService postService, IUserService userService)
         {
             _context = context;
-            _userManager = userManager;
             _postService = postService;
             _userService = userService;
         }
@@ -78,12 +72,13 @@ namespace Click_Go.Controllers
 
             _context.Users.Update(objFromDb);
             _context.SaveChanges();
-            return Ok(new{ success = true, message = "Thao tác thành công", lockoutEnd = objFromDb.LockoutEnd });
+            return Ok(new { success = true, message = "Thao tác thành công", lockoutEnd = objFromDb.LockoutEnd });
         }
+
         [HttpGet("GetTotal")]
         public async Task<IActionResult> GetTotalUser([FromQuery] int? statusPost, DateTime? from, DateTime? to)
         {
-            var totalUser = await _userService.GetTotal(statusPost, from,to);
+            var totalUser = await _userService.GetTotal(statusPost, from, to);
             return Ok(totalUser);
         }
     }

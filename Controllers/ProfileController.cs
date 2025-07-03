@@ -1,11 +1,7 @@
 ﻿using Click_Go.Data;
 using Click_Go.DTOs;
-using Click_Go.Models;
 using Click_Go.Services.Interfaces;
-using Humanizer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -36,7 +32,7 @@ namespace Click_Go.Controllers
             {
                 return NotFound(new { success = false, message = "User not found" });
             }
-            
+
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
 
             return Ok(await _userService.GetProfileAsync(userId));
@@ -57,7 +53,5 @@ namespace Click_Go.Controllers
             await _userService.UpdateAsync(dto);
             return NoContent();
         }
-
-        
     }
 }

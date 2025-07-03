@@ -1,5 +1,3 @@
-
-
 using System.IO;
 using System.Text;
 using System.Text;
@@ -29,8 +27,6 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Tokens;
-
-
 
 namespace Click_Go
 {
@@ -66,8 +62,6 @@ namespace Click_Go
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-            
-
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPostService, PostService>();
@@ -200,28 +194,16 @@ namespace Click_Go
                 app.UseSwaggerUI();
             }
             
-            
-
             app.UseCors("AllowReactApp");
-
 
             if (!app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
             }
 
-            
             app.UseSession();
 
             app.UseRouting();
-
-
-
-           
-           
-
-           
-
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -232,8 +214,6 @@ namespace Click_Go
 
             app.MapHub<NotificationHub>("/hubs/notification");
             app.MapHub<VoucherHub>("/voucherHub");
-
-
 
             // Cho phép truy cập thư mục UploadedFiles như một static folder
             app.UseStaticFiles(new StaticFileOptions
@@ -250,8 +230,6 @@ namespace Click_Go
                 var services = scope.ServiceProvider;
                 await SeedData.SeedAdminAsync(services);
             }
-            
-
 
             await app.RunAsync();
         }

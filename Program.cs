@@ -94,7 +94,12 @@ namespace Click_Go
 
           
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection"),
+                    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null)));
 
             builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 
@@ -225,10 +230,32 @@ namespace Click_Go
 
             app.MapControllers();
 
+            // Apply migrations and seed data
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                await SeedData.SeedAdminAsync(services);
+                var dbContext = services.GetRequiredService<ApplicationDbContext>();
+                try
+                {
+                    // Wait for database to be ready
+                    for (int i = 0; i < 30; i++)
+                    {
+                        if (dbContext.Database.CanConnect())
+                        {
+                            // Apply migrations
+                            await dbContext.Database.MigrateAsync();
+                            await SeedData.SeedAdminAsync(services);
+                            break;
+                        }
+                        Console.WriteLine("Waiting for database to be ready...");
+                        await Task.Delay(1000);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Database initialization failed: {ex.Message}");
+                    throw;
+                }
             }
 
             await app.RunAsync();

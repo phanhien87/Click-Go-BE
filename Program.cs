@@ -27,9 +27,18 @@ namespace Click_Go
 
             builder.WebHost.UseKestrel(options =>
             {
+                options.AddServerHeader = false;
                 options.ListenAnyIP(8080);
                 options.ListenAnyIP(443,
                     listenOptions => { listenOptions.UseHttps("/app/certificate.pfx", builder.Configuration["CertificatePassword"]); });
+            });
+            
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+                options.RequireHeaderSymmetry = false;
             });
 
             // Add services to the container.
@@ -108,6 +117,7 @@ namespace Click_Go
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.None;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.Domain = ".clickgo.dev";
             });
 
             builder.Services.ConfigureExternalCookie(options =>
@@ -165,6 +175,12 @@ namespace Click_Go
                     options.ClientId = builder.Configuration["Google:ClientId"];
                     options.ClientSecret = builder.Configuration["Google:ClientSecret"];
                     options.CallbackPath = builder.Configuration["Google:CallbackPath"];
+                    
+                    options.CorrelationCookie.Path = "/";
+                    options.CorrelationCookie.SameSite = SameSiteMode.None;
+                    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.CorrelationCookie.HttpOnly = true;
+                    options.CorrelationCookie.IsEssential = true;
                 });
 
             builder.Services.AddSignalR().AddHubOptions<NotificationHub>(options =>
@@ -196,6 +212,8 @@ namespace Click_Go
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.None;
             });
 
             builder.Services.AddHttpContextAccessor();
@@ -209,15 +227,7 @@ namespace Click_Go
                 app.UseSwaggerUI();
             }
 
-            var forwardedHeadersOptions = new ForwardedHeadersOptions
-            {
-                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            };
-
-            forwardedHeadersOptions.KnownProxies.Clear();
-            forwardedHeadersOptions.KnownNetworks.Clear();
-
-            app.UseForwardedHeaders(forwardedHeadersOptions);
+            app.UseForwardedHeaders();
 
             if (!app.Environment.IsDevelopment())
             {

@@ -55,6 +55,16 @@ namespace Click_Go.Controllers
         {
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Auth", new { returnUrl });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            
+            Response.OnStarting(() =>
+            {
+                foreach (var header in Response.Headers)
+                {
+                    Console.WriteLine($"Header: {header.Key} = {header.Value}");
+                }
+                return Task.CompletedTask;
+            });
+            
             return Challenge(properties, provider);
         }
 

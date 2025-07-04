@@ -112,11 +112,7 @@ namespace Click_Go
 
             //Add Jwt
             var jwtSettings = builder.Configuration.GetSection("Jwt");
-            builder.Services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                })
+            builder.Services.AddAuthentication()
                 .AddJwtBearer(options =>
                 {
                     options.RequireHttpsMetadata = false;

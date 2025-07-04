@@ -102,6 +102,13 @@ namespace Click_Go
                 options.Cookie.SameSite = SameSiteMode.None;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
+            
+            builder.Services.ConfigureExternalCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            });
 
             //Add Jwt
             var jwtSettings = builder.Configuration.GetSection("Jwt");

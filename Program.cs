@@ -25,6 +25,13 @@ namespace Click_Go
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.WebHost.UseKestrel(options =>
+            {
+                options.ListenAnyIP(8080);
+                options.ListenAnyIP(443,
+                    listenOptions => { listenOptions.UseHttps("/app/certificate.pfx", builder.Configuration["CertificatePassword"]); });
+            });
+
             // Add services to the container.
 
             builder.Services.AddControllers()
@@ -102,7 +109,7 @@ namespace Click_Go
                 options.Cookie.SameSite = SameSiteMode.None;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
-            
+
             builder.Services.ConfigureExternalCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
@@ -112,7 +119,11 @@ namespace Click_Go
 
             //Add Jwt
             var jwtSettings = builder.Configuration.GetSection("Jwt");
-            builder.Services.AddAuthentication()
+            builder.Services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(options =>
                 {
                     options.RequireHttpsMetadata = false;

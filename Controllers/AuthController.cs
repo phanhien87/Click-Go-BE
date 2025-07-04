@@ -51,7 +51,6 @@ namespace Click_Go.Controllers
         }
 
         [HttpGet("external-login")]
-        [Route("external-login")]
         public IActionResult ExternalLogin(string provider, string returnUrl = null)
         {
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Auth", new { returnUrl });
@@ -70,7 +69,6 @@ namespace Click_Go.Controllers
         }
 
         [HttpGet("external-login-callback")]
-        [Route("external-login-callback")]
         public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
         {
             string frontendUrl = _configuration["FrontendUrl"] ?? "https://clickgo.dev";

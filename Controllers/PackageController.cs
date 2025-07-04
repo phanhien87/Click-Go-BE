@@ -16,7 +16,7 @@ namespace Click_Go.Controllers
         }
 
         [HttpGet("AllPackages")]
-        [Authorize(Roles = "CUSTOMER")]
+        [AllowAnonymous]
         public async Task<IActionResult> AllPackages()
         {
             return Ok(await _packageService.GetAllPackagesAsync());

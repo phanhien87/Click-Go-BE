@@ -192,30 +192,16 @@ namespace Click_Go
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
-                ForwardedHeaders = ForwardedHeaders.XForwardedProto,
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
             
-            app.UseCors("AllowReactApp");
-
             if (!app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
             }
-
-            app.UseSession();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.UseRouting();
-
-            app.UseMiddleware<ExceptionMiddleware>();
-            app.UseMiddleware<BanCheckMiddleware>();
-            app.UseMiddleware<UserPackageValidationMiddleware>();
-
-            app.MapHub<NotificationHub>("/hubs/notification");
-            app.MapHub<VoucherHub>("/voucherHub");
-
+            
+            app.UseCors("AllowReactApp");
+            
             // Cho phép truy cập thư mục UploadedFiles như một static folder
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -223,6 +209,20 @@ namespace Click_Go
                     Path.Combine(builder.Environment.ContentRootPath, "data", "UploadedFiles")),
                 RequestPath = "/data/UploadedFiles"
             });
+
+            app.UseRouting();
+            
+            app.UseSession();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<BanCheckMiddleware>();
+            app.UseMiddleware<UserPackageValidationMiddleware>();
+
+            app.MapHub<NotificationHub>("/hubs/notification");
+            app.MapHub<VoucherHub>("/voucherHub");
 
             app.MapControllers();
 

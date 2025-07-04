@@ -62,13 +62,12 @@ namespace Click_Go
 
             builder.Services.AddScoped<IWishlistService, WishlistService>();
 
-            builder.Services.AddScoped<IWishlistService, WishlistService>(); 
+            builder.Services.AddScoped<IWishlistService, WishlistService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IVoucherService, VoucherService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
-
 
 
             builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
@@ -81,7 +80,7 @@ namespace Click_Go
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();
 
-          
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -94,59 +93,58 @@ namespace Click_Go
 
             //Add identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-             .AddEntityFrameworkStores<ApplicationDbContext>()
-             .AddDefaultTokenProviders();
-            
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
             //Add Jwt
             var jwtSettings = builder.Configuration.GetSection("Jwt");
             builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = false;
-                options.SaveToken = true;
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
+                {
+                    options.RequireHttpsMetadata = false;
+                    options.SaveToken = true;
 
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = jwtSettings["Audience"],
-                    ValidIssuer = jwtSettings["Issuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
-                    ClockSkew = TimeSpan.Zero
-                };
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        var accessToken = context.Request.Query["access_token"];
-
-                        // Nếu request đến Hub thì lấy token từ query string
-                        var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) &&
-                            path.StartsWithSegments("/hubs/notification"))
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidAudience = jwtSettings["Audience"],
+                        ValidIssuer = jwtSettings["Issuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
+                        ClockSkew = TimeSpan.Zero
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
                         {
-                            context.Token = accessToken;
+                            var accessToken = context.Request.Query["access_token"];
+
+                            // Nếu request đến Hub thì lấy token từ query string
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/hubs/notification"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
                         }
-
-                        return Task.CompletedTask;
-                    }
-                };
-
-            })
-            .AddFacebook(options =>
-            {
-                options.AppId = builder.Configuration["Facebook:AppId"];
-                options.AppSecret = builder.Configuration["Facebook:AppSecret"];
-            }).AddGoogle(options =>
-            {
-                options.ClientId = builder.Configuration["Google:ClientId"];
-                options.ClientSecret = builder.Configuration["Google:ClientSecret"];
-                options.CallbackPath = builder.Configuration["Google:CallbackPath"];
-            });
+                    };
+                })
+                .AddFacebook(options =>
+                {
+                    options.AppId = builder.Configuration["Facebook:AppId"];
+                    options.AppSecret = builder.Configuration["Facebook:AppSecret"];
+                }).AddGoogle(options =>
+                {
+                    options.ClientId = builder.Configuration["Google:ClientId"];
+                    options.ClientSecret = builder.Configuration["Google:ClientSecret"];
+                    options.CallbackPath = builder.Configuration["Google:CallbackPath"];
+                });
 
             builder.Services.AddSignalR().AddHubOptions<NotificationHub>(options =>
             {
@@ -159,12 +157,12 @@ namespace Click_Go
                 options.AddPolicy("AllowReactApp",
                     builder => builder
                         .WithOrigins("http://clickgo_frontend:3000",
-                                     "https://clickgo.dev",
-                                     "http://localhost:3001")  // Chỉ cho phép frontend này gọi
-                        .AllowAnyMethod()                      // Cho phép mọi method (GET, POST, PUT, DELETE, ...)
-                        .AllowAnyHeader()                // Cho phép mọi header (ví dụ Authorization)
-                        .AllowCredentials()                 // nếu dùng cookies/token
-                        ); 
+                            "https://clickgo.dev",
+                            "http://localhost:3001") // Chỉ cho phép frontend này gọi
+                        .AllowAnyMethod() // Cho phép mọi method (GET, POST, PUT, DELETE, ...)
+                        .AllowAnyHeader() // Cho phép mọi header (ví dụ Authorization)
+                        .AllowCredentials() // nếu dùng cookies/token
+                );
             });
 
 
@@ -190,18 +188,23 @@ namespace Click_Go
                 app.UseSwaggerUI();
             }
 
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            var forwardedHeadersOptions = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
-            
+            };
+
+            forwardedHeadersOptions.KnownProxies.Clear();
+            forwardedHeadersOptions.KnownNetworks.Clear();
+
+            app.UseForwardedHeaders(forwardedHeadersOptions);
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
             }
-            
+
             app.UseCors("AllowReactApp");
-            
+
             // Cho phép truy cập thư mục UploadedFiles như một static folder
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -211,7 +214,7 @@ namespace Click_Go
             });
 
             app.UseRouting();
-            
+
             app.UseSession();
 
             app.UseAuthentication();
@@ -243,6 +246,7 @@ namespace Click_Go
                             await SeedData.SeedAdminAsync(services);
                             break;
                         }
+
                         Console.WriteLine("Waiting for database to be ready...");
                         await Task.Delay(1000);
                     }

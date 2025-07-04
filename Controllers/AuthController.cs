@@ -63,69 +63,71 @@ namespace Click_Go.Controllers
         {
             string frontendUrl = _configuration["FrontendUrl"] ?? "https://clickgo.dev";
 
-            if (remoteError != null)
-                return Redirect($"{frontendUrl}/login?error={remoteError}");
-
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
-                return Redirect($"{frontendUrl}/login?error=Không thể lấy thông tin đăng nhập");
-
-            var signInResult =
-                await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey,
-                    isPersistent: false);
-
-            if (signInResult.Succeeded)
+            try
             {
-                // Lấy user và tạo token
-                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
-                var token = await _authService.GenerateJwtTokenAsync(user);
+                if (remoteError != null)
+                    return Redirect($"{frontendUrl}/login?error={remoteError}");
 
-                // Redirect về frontend kèm token
-                return Redirect($"{frontendUrl}/login?token={token}");
-            }
-            else
-            {
-                // Xử lý tạo user mới
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                var existingUser = await _userManager.FindByEmailAsync(email);
+                var info = await _signInManager.GetExternalLoginInfoAsync();
+                if (info == null)
+                    return Redirect($"{frontendUrl}/login?error=Không thể lấy thông tin đăng nhập");
 
-                if (existingUser != null)
+                var signInResult =
+                    await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey,
+                        isPersistent: false);
+
+                if (signInResult.Succeeded)
                 {
-                    // User đã tồn tại nhưng chưa liên kết với Google
-                    var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
-                    if (addLoginResult.Succeeded)
-                    {
-                        var token = await _authService.GenerateJwtTokenAsync(existingUser);
-                        return Redirect($"{frontendUrl}/login?token={token}");
-                    }
-
-                    return Redirect($"{frontendUrl}/login?error=Liên kết tài khoản thất bại");
+                    var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                    var token = await _authService.GenerateJwtTokenAsync(user);
+                    return Redirect($"{frontendUrl}/login?token={token}");
                 }
                 else
                 {
-                    var user = new ApplicationUser
+                    var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                    var existingUser = await _userManager.FindByEmailAsync(email);
+
+                    if (existingUser != null)
                     {
-                        UserName = email.Split('@')[0],
-                        Email = email,
-                        FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email.Split('@')[0]
-                    };
+                        var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
+                        if (addLoginResult.Succeeded)
+                        {
+                            var token = await _authService.GenerateJwtTokenAsync(existingUser);
+                            return Redirect($"{frontendUrl}/login?token={token}");
+                        }
 
-                    var createResult = await _userManager.CreateAsync(user);
-
-                    if (createResult.Succeeded)
-                    {
-                        await _userManager.AddLoginAsync(user, info);
-                        await _userManager.AddToRoleAsync(user, "CUSTOMER");
-
-                        var token = await _authService.GenerateJwtTokenAsync(user);
-                        return Redirect($"{frontendUrl}/login?token={token}");
+                        return Redirect($"{frontendUrl}/login?error=Liên kết tài khoản thất bại");
                     }
                     else
                     {
-                        // TODO: xử lý lỗi tạo user
-                        return Redirect($"{frontendUrl}/login?error=Tạo tài khoản thất bại");
+                        var user = new ApplicationUser
+                        {
+                            UserName = email.Split('@')[0],
+                            Email = email,
+                            FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email.Split('@')[0]
+                        };
+
+                        var createResult = await _userManager.CreateAsync(user);
+
+                        if (createResult.Succeeded)
+                        {
+                            await _userManager.AddLoginAsync(user, info);
+                            await _userManager.AddToRoleAsync(user, "CUSTOMER");
+
+                            var token = await _authService.GenerateJwtTokenAsync(user);
+                            return Redirect($"{frontendUrl}/login?token={token}");
+                        }
+                        else
+                        {
+                            return Redirect($"{frontendUrl}/login?error=Tạo tài khoản thất bại");
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OAuth ERROR] {ex.Message}\n{ex.StackTrace}");
+                return Redirect($"{frontendUrl}/login?error=Server OAuth lỗi: {ex.Message}");
             }
         }
     }

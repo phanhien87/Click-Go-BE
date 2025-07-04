@@ -80,6 +80,12 @@ namespace Click_Go
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();
 
+            builder.Services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+    
+                options.Secure = CookieSecurePolicy.Always;
+            });
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
@@ -214,6 +220,8 @@ namespace Click_Go
             });
 
             app.UseRouting();
+            
+            app.UseCookiePolicy();
 
             app.UseSession();
 

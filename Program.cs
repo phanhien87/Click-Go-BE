@@ -80,12 +80,6 @@ namespace Click_Go
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();
 
-            builder.Services.Configure<CookiePolicyOptions>(options =>
-            {
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-    
-                options.Secure = CookieSecurePolicy.Always;
-            });
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
@@ -101,6 +95,13 @@ namespace Click_Go
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            });
 
             //Add Jwt
             var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -220,8 +221,6 @@ namespace Click_Go
             });
 
             app.UseRouting();
-            
-            app.UseCookiePolicy();
 
             app.UseSession();
 

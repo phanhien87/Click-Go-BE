@@ -48,8 +48,10 @@ namespace Click_Go.Services
 
                 foreach (var file in dto.Images)
                 {
+                    var rootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "UploadedFiles", "reviews");
+                    Directory.CreateDirectory(rootPath);
                     var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-                    var path = Path.Combine("/data/UploadedFiles/reviews", fileName);
+                    var path = Path.Combine(rootPath, fileName);
                     var directory = Path.GetDirectoryName(path);
 
                     if (directory != null && !Directory.Exists(directory))

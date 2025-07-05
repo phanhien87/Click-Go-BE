@@ -32,7 +32,7 @@ namespace Click_Go
                 options.ListenAnyIP(443,
                     listenOptions => { listenOptions.UseHttps("/app/certificate.pfx", builder.Configuration["CertificatePassword"]); });
             });
-            
+
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -195,7 +195,9 @@ namespace Click_Go
                     builder => builder
                         .WithOrigins("http://clickgo_frontend:3000",
                             "https://clickgo.dev",
-                            "http://localhost:3001") // Chỉ cho phép frontend này gọi
+                            "http://clickgo.dev",
+                            "http://localhost:3001",
+                            "http://localhost:3000") // Chỉ cho phép frontend này gọi
                         .AllowAnyMethod() // Cho phép mọi method (GET, POST, PUT, DELETE, ...)
                         .AllowAnyHeader() // Cho phép mọi header (ví dụ Authorization)
                         .AllowCredentials() // nếu dùng cookies/token
@@ -237,12 +239,14 @@ namespace Click_Go
             app.UseCors("AllowReactApp");
 
             // Cho phép truy cập thư mục UploadedFiles như một static folder
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(
-                    Path.Combine(builder.Environment.ContentRootPath, "data", "UploadedFiles")),
-                RequestPath = "/data/UploadedFiles"
-            });
+            //app.UseStaticFiles(new StaticFileOptions
+            //{
+            //    FileProvider = new PhysicalFileProvider(
+            //        Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "data", "UploadedFiles")),
+            //    RequestPath = "/data/UploadedFiles"
+            //});
+
+            app.UseStaticFiles(); // Duy nhất dòng này là đủ
 
             app.UseRouting();
 
@@ -267,18 +271,18 @@ namespace Click_Go
                 var dbContext = services.GetRequiredService<ApplicationDbContext>();
                 try
                 {
-                    // Wait for database to be ready
+                    // wait for database to be ready
                     for (int i = 0; i < 30; i++)
                     {
                         if (dbContext.Database.CanConnect())
                         {
-                            // Apply migrations
+                            // apply migrations
                             await dbContext.Database.MigrateAsync();
                             await SeedData.SeedAdminAsync(services);
                             break;
                         }
 
-                        Console.WriteLine("Waiting for database to be ready...");
+                        Console.WriteLine("waiting for database to be ready...");
                         await Task.Delay(1000);
                     }
                 }

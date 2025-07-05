@@ -72,6 +72,7 @@ namespace Click_Go.Controllers
         public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
         {
             string frontendUrl = _configuration["FrontendUrl"] ?? "https://clickgo.dev";
+            //string frontendUrl = "http://localhost:3000";
 
             try
             {

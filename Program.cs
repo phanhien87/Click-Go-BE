@@ -236,12 +236,7 @@ namespace Click_Go
 
 
             // Cho phép truy cập thư mục UploadedFiles như một static folder
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(
-                    Path.Combine(builder.Environment.ContentRootPath, "UploadedFiles")),
-                RequestPath = "/UploadedFiles"
-            });
+            app.UseStaticFiles();
 
             app.MapControllers();
 

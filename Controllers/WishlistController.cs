@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Click_Go.DTOs; 
-using System.Collections.Generic; 
+using System.Collections.Generic;
+using Click_Go.DTOs;
 
 namespace Click_Go.Controllers
 {

@@ -8,6 +8,41 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="DTOs\AllVouncherDto.cs" />
+    <Content Include="DTOs\CategoryDto.cs" />
+    <Content Include="DTOs\CommentAncestorPathResult.cs" />
+    <Content Include="DTOs\CommentDto.cs" />
+    <Content Include="DTOs\CreatePaymentLinkDto.cs" />
+    <Content Include="DTOs\GetCommentByPostDto.cs" />
+    <Content Include="DTOs\GetPostDto.cs" />
+    <Content Include="DTOs\GetReplyByPostDto.cs" />
+    <Content Include="DTOs\GetReviewByPostDto.cs" />
+    <Content Include="DTOs\GetTotalDto.cs" />
+    <Content Include="DTOs\ImageDto.cs" />
+    <Content Include="DTOs\LoginDto.cs" />
+    <Content Include="DTOs\OpeningHourDto.cs" />
+    <Content Include="DTOs\OrderCodeDto.cs" />
+    <Content Include="DTOs\OverallCriteriaDto.cs" />
+    <Content Include="DTOs\PaginationDto.cs" />
+    <Content Include="DTOs\PaymentRequestDto.cs" />
+    <Content Include="DTOs\PaymentResult.cs" />
+    <Content Include="DTOs\PayOSPaymentWebhookDto.cs" />
+    <Content Include="DTOs\PostCreateDto.cs" />
+    <Content Include="DTOs\PostReadDto.cs" />
+    <Content Include="DTOs\PostSearchDto.cs" />
+    <Content Include="DTOs\PostUpdateDto.cs" />
+    <Content Include="DTOs\RatingDetailDto.cs" />
+    <Content Include="DTOs\ReactDto.cs" />
+    <Content Include="DTOs\RegisterDto.cs" />
+    <Content Include="DTOs\ReviewRequestDto.cs" />
+    <Content Include="DTOs\ReviewResponseDto.cs" />
+    <Content Include="DTOs\TagDto.cs" />
+    <Content Include="DTOs\UpdateProfileDto.cs" />
+    <Content Include="DTOs\UserDto.cs" />
+    <Content Include="DTOs\VoucherProcessDto.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MailKit" Version="4.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="8.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.12" />
@@ -29,7 +64,72 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
-    <Folder Include="UploadedFiles\reviews\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\data\UploadedFiles\backgrounds\224ca65a-e973-4a12-a84f-9f3bcaac205b_1.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\backgrounds\2fb4c379-7b20-4757-90c3-3553f1a9f5bd_Screenshot 2025-06-05 104021.png" />
+    <None Include="wwwroot\data\UploadedFiles\backgrounds\86151f42-005b-4468-9dbd-bee1ae959da7_4.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\backgrounds\8fafdae5-fb72-4e21-bcb9-dcc8f3d6e2c0_Screenshot 2025-06-05 105647.png" />
+    <None Include="wwwroot\data\UploadedFiles\backgrounds\94fc5f29-5067-4bf2-a3ef-f9cbff619d80_a8c4528b-b447-4c5e-aa55-e19e8fd5a270_2025-01-07 %282%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\backgrounds\a8c4528b-b447-4c5e-aa55-e19e8fd5a270_2025-01-07 %282%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\backgrounds\e6081ff8-74bc-4617-8a65-7f7818abf974_3.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\logos\001982b7-f236-4cd1-a365-596c71b2c8b9_2025-01-07 %281%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\logos\3c403837-79c7-4404-95a5-1b0dd3c0948e_2.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\logos\4dd20d72-830a-4e8c-a1b1-555df9f74aba_faviconnn.png" />
+    <None Include="wwwroot\data\UploadedFiles\logos\5d6601de-f901-4eac-9557-d64b7e8aed89_Screenshot 2025-06-05 105615.png" />
+    <None Include="wwwroot\data\UploadedFiles\logos\6cf06edf-2c64-41f7-ac7c-3c613cd46d07_001982b7-f236-4cd1-a365-596c71b2c8b9_2025-01-07 %281%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\logos\a1a79b77-3b46-4015-ad7c-df6ba782b265_faviconnn.png" />
+    <None Include="wwwroot\data\UploadedFiles\logos\a48c09e8-278d-47c8-9a9c-0d3d7cafabf1_Screenshot 2025-06-05 104104.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\086a38b7-21d2-4afd-a644-51bef2f60957_1-2.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\0e2525da-04ff-4922-b30e-45eb9c1016d6_2025-01-07 %283%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\4e3fac23-23fa-4c35-bd15-b27c85b2837f_1-5.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\54ce76c3-ca6f-455c-a2d9-980f4c8ebf6c_1-6.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\552e81b1-41b3-424e-aef2-3956beebfbec_1-1.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\55a6a2b6-4cd2-452d-b2f6-1e788c6a71ef_1-1.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\5c2dab6f-5600-4c78-a07c-3e206d06dbca_Screenshot 2025-06-05 104138.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\678090a2-1718-4670-929f-fb670119bd48_Screenshot 2025-06-05 105744.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\74fd9304-d9af-4b81-baa9-540e0bbb9ad0_1-3.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\85e367df-39e8-4e04-bfea-a252a87741b9_1-3.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\adad6036-3761-44a9-bdbe-2ce652144c12_2025-01-07 %285%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\c188e45f-c121-4d33-8f69-46fdd24da072_Screenshot 2025-06-05 104044.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\c3cd8348-3d60-4207-827a-c3c35e53ae79_1-4.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\posts\ca183e0f-2fbc-44e9-9890-1b336c48a65c_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\d7c8bd6f-c0de-44e5-969c-5c1bce8ab7fe_0e2525da-04ff-4922-b30e-45eb9c1016d6_2025-01-07 %283%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\dfe041ba-bfbf-45b0-b10b-39cd1a3c8613_2025-01-07 %284%29.png" />
+    <None Include="wwwroot\data\UploadedFiles\posts\fd558a42-4390-44d5-bbec-2354b5a00045_Screenshot 2025-06-05 105721.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\079e3b40-fbc9-4d85-a333-1c73123367d9_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\0b59a663-7861-4df8-aa38-428887d583a9_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\112bedca-3c24-4ce3-8206-7414c41a56ff_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\1a27c366-5c27-4052-a93a-8ae853eb6763_1-8.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\29b8452b-5905-42ab-87c0-7b915dffd8a1_Screenshot 2025-06-05 104104.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\29e0d9de-5b30-4fe6-8266-4be997ee33a4_cartwheel.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\43d07b12-6355-4fa4-9b6a-787ae3651a66_Screenshot 2025-06-05 104104.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\457838af-e80b-4db6-be29-b57e6fabcb42_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\4fc750f0-36b2-47b9-b506-5b3c68c967a1_Screenshot 2025-06-05 105633.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\547a80f3-de5a-42b3-a8a0-786f35256550_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\6309c0f8-7b16-4f75-a846-41d24cd3e157_Screenshot 2025-06-05 105744.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\6593f613-7092-4485-9fc0-814a1e7a1518_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\691e7000-fd71-42a5-a7b0-280614cad4b0_Screenshot 2025-06-05 104104.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\6d3a7ace-fc1a-4eea-9a24-af866dce3443_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\7e51e99a-d859-41e0-9eb0-31c5347cac40_Screenshot 2025-06-05 104138.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\83752a1a-5544-4f69-a4a0-fcaa12401f30_Screenshot 2025-06-05 105721.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\8ad17bd4-2583-4060-8f08-28a3c8f238ef_1-4.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\9c407c52-28fa-4018-b8ef-4570f75424dc_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\9f6184f6-1e92-470c-84f8-36a3ee027d52_Screenshot 2025-06-05 104021.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\a9171d49-b8b2-4671-8bec-717a72e05314_Screenshot 2025-06-05 104044.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\ad29e688-b386-4735-a53f-67884c75be65_1-4.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\cd76ffe1-2618-424d-9294-e83f3b57ccaa_Screenshot 2025-06-05 104104.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\d088fb67-a2af-4216-8487-21ac5db62816_bar-img-1.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\d616c69b-f82b-4b1e-9fc8-e2eab7484d67_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\dc67482a-4e97-4cca-b40a-bd219cbfa8c7_review-img-1.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\dc7d3c0a-65af-481c-be04-756d2af35623_Screenshot 2025-06-05 110430.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\dfa81ccf-6361-4dfc-bf44-e7e898686ab5_Screenshot 2025-06-05 103935.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\dfe94ea1-1ea7-43d6-b88e-373c2600b732_Screenshot 2025-06-05 105744.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\e082e5e6-aeaa-4191-b3f1-9cbf8f8733a8_review-img-2.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\e4df302e-917b-45d2-8814-87a7b34c2590_Screenshot 2025-06-05 110430.png" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\e83697a2-5ea8-4dfe-a5e5-d7b64928684e_1-1.jpg" />
+    <None Include="wwwroot\data\UploadedFiles\reviews\f7aa3b59-59da-4351-a805-c05fec688678_Screenshot 2025-06-05 105647.png" />
   </ItemGroup>
 
 </Project>

@@ -115,7 +115,7 @@ namespace Click_Go
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 options.Cookie.Domain = ".clickgo.dev";
             });
@@ -123,7 +123,7 @@ namespace Click_Go
             builder.Services.ConfigureExternalCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
@@ -181,6 +181,8 @@ namespace Click_Go
                     options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
                     options.CorrelationCookie.HttpOnly = true;
                     options.CorrelationCookie.IsEssential = true;
+
+		    options.CorrelationCookie.Domain = ".clickgo.dev";
                 });
 
             builder.Services.AddSignalR().AddHubOptions<NotificationHub>(options =>

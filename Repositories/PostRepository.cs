@@ -124,6 +124,8 @@ namespace Click_Go.Repositories
                 .Include(p => p.Images)
                 .Include(p => p.Opening_Hours)
                 .Include(p => p.Tags)
+                .OrderBy(p => p.level == 1 ? 0 : 1)
+                .ThenBy(p => p.CreatedDate)
                 .AsQueryable();
 
             // Filter by post name if provided
@@ -172,13 +174,13 @@ namespace Click_Go.Repositories
         public async Task<IEnumerable<Post>> GetAllAsync()
         {
             return await _context.Posts
-                .Where(p => p.Status == 1) // Only include active posts
+                .Where(p => p.Status == 1 && p.level == 1) // Only include active posts
                 .Include(p => p.Category)
                 .Include(p => p.User)
                 .Include(p => p.Opening_Hours)
                 .Include(p => p.Images)
                 .Include(p => p.Tags)
-                .OrderByDescending(p => p.CreatedDate)
+                .OrderBy(p => p.CreatedDate)
                 .ToListAsync();
         }
 

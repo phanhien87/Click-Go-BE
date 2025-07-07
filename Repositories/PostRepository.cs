@@ -1,11 +1,11 @@
-﻿using Click_Go.Data;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Click_Go.Data;
 using Click_Go.DTOs;
 using Click_Go.Models;
 using Click_Go.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Click_Go.Repositories
 {
@@ -124,13 +124,18 @@ namespace Click_Go.Repositories
                 .Include(p => p.Images)
                 .Include(p => p.Opening_Hours)
                 .Include(p => p.Tags)
+                .OrderBy(p => p.level == 1 ? 0 : 1)
+                .ThenBy(p => p.CreatedDate)
                 .AsQueryable();
 
             // Filter by post name if provided
             if (!string.IsNullOrWhiteSpace(searchDto.PostName))
             {
-                var postNameLower = searchDto.PostName.ToLower().Trim();
-                query = query.Where(p => p.Name != null && p.Name.ToLower().Contains(postNameLower));
+                var keywords = searchDto.PostName.ToLower().Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                query = query.Where(p =>
+                    p.Name != null &&
+                    keywords.Any(k => p.Name.ToLower().Contains(k)));
             }
 
             // Process address components
@@ -172,13 +177,13 @@ namespace Click_Go.Repositories
         public async Task<IEnumerable<Post>> GetAllAsync()
         {
             return await _context.Posts
-                .Where(p => p.Status == 1) // Only include active posts
+                .Where(p => p.Status == 1 && p.level == 1) // Only include active posts
                 .Include(p => p.Category)
                 .Include(p => p.User)
                 .Include(p => p.Opening_Hours)
                 .Include(p => p.Images)
                 .Include(p => p.Tags)
-                .OrderByDescending(p => p.CreatedDate)
+                .OrderBy(p => p.CreatedDate)
                 .ToListAsync();
         }
 

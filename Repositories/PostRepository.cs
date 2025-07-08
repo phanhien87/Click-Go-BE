@@ -100,15 +100,19 @@ namespace Click_Go.Repositories
                     .Distinct()
                     .ToList();
 
-                // Materialize posts to perform tag filtering in memory
                 var postsWithIncludes = await query.ToListAsync();
 
-                // Count after filtering in memory
-                return postsWithIncludes.Count(p => 
-                    p.Tags != null && 
-                    lowerCaseTagNames.All(tagName => 
-                        p.Tags.Any(t => t.Name.ToLower() == tagName)));
+                return postsWithIncludes.Count(p =>
+                    p.Tags != null &&
+                    lowerCaseTagNames.All(tagName =>
+                        p.Tags.Any(t =>
+                            !string.IsNullOrWhiteSpace(t.Name) &&
+                            t.Name.ToLower().Trim() == tagName
+                        )
+                    )
+                );
             }
+
 
             return totalCount;
         }

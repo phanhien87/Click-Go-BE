@@ -131,8 +131,11 @@ namespace Click_Go.Repositories
             // Filter by post name if provided
             if (!string.IsNullOrWhiteSpace(searchDto.PostName))
             {
-                var postNameLower = searchDto.PostName.ToLower().Trim();
-                query = query.Where(p => p.Name != null && p.Name.ToLower().Contains(postNameLower));
+                var keywords = searchDto.PostName.ToLower().Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                query = query.Where(p =>
+                    p.Name != null &&
+                    keywords.Any(k => p.Name.ToLower().Contains(k)));
             }
 
             // Process address components

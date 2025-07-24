@@ -43,6 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" Version="2.11.0" />
     <PackageReference Include="MailKit" Version="4.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="8.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.12" />
@@ -59,6 +60,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
     <PackageReference Include="payOS" Version="1.0.9" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.58" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 

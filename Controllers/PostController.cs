@@ -189,7 +189,7 @@ namespace Click_Go.Controllers
                         Detail = "No posts matched your search criteria or no active posts were found." 
                     });
                 }
-                await _kafkaProducer.ProduceAsync("search-queries", new Message<Null, string> { Value = searchDto.PostName });
+                //await _kafkaProducer.ProduceAsync("search-queries", new Message<Null, string> { Value = searchDto.PostName });
                 return Ok(result);
             }
             catch (AppException ex) when (ex.Message.Contains("Page number") && ex.Message.Contains("exceeds total pages"))

@@ -1,16 +1,18 @@
-﻿using Click_Go.DTOs;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Click_Go.DTOs;
+using Click_Go.Helper;
 using Click_Go.Models; 
 using Click_Go.Services.Interfaces;
-using Click_Go.Helper;
+using Confluent.Kafka;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging; 
-using System;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Collections.Generic; 
+
 
 namespace Click_Go.Controllers
 {
@@ -19,13 +21,15 @@ namespace Click_Go.Controllers
     [Authorize(Roles = nameof(Enum.Application_Role.CUSTOMER))] 
     public class PostController : ControllerBase
     {
+        private readonly IProducer<Null, string> _kafkaProducer;
         private readonly IPostService _postService;
         private readonly ILogger<PostController> _logger;
 
-        public PostController(IPostService postService, ILogger<PostController> logger)
+        public PostController(IPostService postService, ILogger<PostController> logger, IProducer<Null, string> kafkaProducer)
         {
             _postService = postService;
-            _logger = logger; 
+            _logger = logger;
+            _kafkaProducer = kafkaProducer;
         }
         [HttpGet]
         public async Task<IActionResult> GetPostIdByUser([FromQuery] string userId)
@@ -185,7 +189,7 @@ namespace Click_Go.Controllers
                         Detail = "No posts matched your search criteria or no active posts were found." 
                     });
                 }
-
+                //await _kafkaProducer.ProduceAsync("search-queries", new Message<Null, string> { Value = searchDto.PostName });
                 return Ok(result);
             }
             catch (AppException ex) when (ex.Message.Contains("Page number") && ex.Message.Contains("exceeds total pages"))

@@ -1,7 +1,7 @@
-using Click_Go.DTOs;
 using Click_Go.Models;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Click_Go.DTOs;
 
 namespace Click_Go.Services.Interfaces
 {

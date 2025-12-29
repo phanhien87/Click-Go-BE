@@ -9,15 +9,18 @@ using Click_Go.Data;
 using Click_Go.Helper;
 using Click_Go.Helper;
 using Click_Go.Hubs;
+using Click_Go.Kafka;
 using Click_Go.Middleware;
 using Click_Go.Middleware;
 using Click_Go.Models;
+using Click_Go.Redis;
 using Click_Go.Repositories;
 using Click_Go.Repositories;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Repositories.Interfaces;
 using Click_Go.Services;
 using Click_Go.Services.Interfaces;
+using Confluent.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -29,6 +32,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 
 
 
@@ -98,11 +102,28 @@ namespace Click_Go
             builder.Services.AddScoped<SaveImage>();
             builder.Services.AddScoped<UnitOfWork>();
 
-          
+            // Kafka
+            builder.Services.AddSingleton<IProducer<Null, string>>(sp =>
+            {
+                var config = new ProducerConfig { BootstrapServers = "localhost:9092" };
+                return new ProducerBuilder<Null, string>(config).Build();
+            });
+
+            // Redis
+            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+                ConnectionMultiplexer.Connect("localhost:6379"));
+            builder.Services.AddScoped<RedisService>();
+
+            // Background Worker
+            builder.Services.AddHostedService<SearchKeywordConsumer>();
+
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
+           
 
             //Add identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -202,7 +223,7 @@ namespace Click_Go
             
             
 
-            app.UseCors("AllowReactApp");
+           
 
 
             if (!app.Environment.IsDevelopment())
@@ -217,11 +238,11 @@ namespace Click_Go
 
 
 
-           
-           
 
-           
 
+
+
+            app.UseCors("AllowReactApp");
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -236,12 +257,7 @@ namespace Click_Go
 
 
             // Cho phép truy cập thư mục UploadedFiles như một static folder
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(
-                    Path.Combine(builder.Environment.ContentRootPath, "UploadedFiles")),
-                RequestPath = "/UploadedFiles"
-            });
+            app.UseStaticFiles();
 
             app.MapControllers();
 
@@ -250,9 +266,9 @@ namespace Click_Go
                 var services = scope.ServiceProvider;
                 await SeedData.SeedAdminAsync(services);
             }
-            
 
 
+            //await new KafkaTopicCreator().CreateTopicAsync();
             await app.RunAsync();
         }
     }

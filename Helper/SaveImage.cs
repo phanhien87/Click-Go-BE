@@ -19,7 +19,7 @@ namespace Click_Go.Helper
             }
 
             // Use ContentRootPath instead of WebRootPath
-            var baseFolder = Path.Combine(_webHostEnvironment.ContentRootPath, "UploadedFiles");
+            var baseFolder = Path.Combine(_webHostEnvironment.WebRootPath,"data" ,"UploadedFiles");
             var specificUploadsFolder = Path.Combine(baseFolder, subfolder);
 
             if (!Directory.Exists(specificUploadsFolder))
@@ -36,7 +36,7 @@ namespace Click_Go.Helper
             }
 
             // Return the relative path starting from "UploadedFiles"
-            return Path.Combine("UploadedFiles", subfolder, uniqueFileName).Replace("\\", "/");
+            return Path.Combine("/data/UploadedFiles", subfolder, uniqueFileName).Replace("\\", "/");
         }
     }
 }
